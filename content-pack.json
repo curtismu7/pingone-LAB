@@ -1,0 +1,331 @@
+{
+  "schema": "demo-content-pack/1",
+  "id": "pingone-lab",
+  "title": "PingOne LAB",
+  "version": "0.1.0",
+  "demo": {
+    "id": "pingone-lab",
+    "name": "PingOne LAB",
+    "baseUrl": "http://127.0.0.1:5500",
+    "doctor": "/api/health",
+    "tags": [
+      "pingone",
+      "pi-flow",
+      "oauth",
+      "agents"
+    ],
+    "catalog": "A29"
+  },
+  "glossary": [
+    {
+      "id": "mock-live",
+      "term": "Mock and Live",
+      "definition": "Mock runs every card against a simulated PingOne inside the lab; nothing leaves the machine and every token is labelled mock. Live talks to the PingOne environment you set in Settings, and only to it. The header toggle and the banner always say which one is on."
+    },
+    {
+      "id": "advertised-only",
+      "term": "Only what PingOne advertises",
+      "definition": "Every card is gated on PingOne's discovery document. A feature PingOne does not advertise (DPoP, rich authorization requests, dynamic client registration, ID-JAG) has no card, and a card whose feature is missing from your environment says Not advertised."
+    },
+    {
+      "id": "pi-flow",
+      "term": "pi.flow",
+      "definition": "An authorization request with response_mode=pi.flow gets a JSON flow back instead of a login page. The app draws its own form and posts the answers to the flow; PingOne still runs the sign-in policy, the password check and MFA. When the flow is COMPLETED the app fetches the authorization code from the resume URL."
+    },
+    {
+      "id": "flow-status",
+      "term": "Flow status",
+      "definition": "The status field of a pi.flow says what PingOne needs next, for example USERNAME_PASSWORD_REQUIRED, or SIGN_ON_REQUIRED on an identifier-first policy where the username is posted first (user.lookup). This lab drives the password path; MFA statuses stop the run and are shown."
+    },
+    {
+      "id": "pkce",
+      "term": "PKCE",
+      "definition": "Proof Key for Code Exchange (RFC 7636): the app keeps a one-time code_verifier and sends its S256 hash. A stolen authorization code cannot be redeemed without the verifier. It does not authenticate the client."
+    },
+    {
+      "id": "par",
+      "term": "PAR",
+      "definition": "Pushed Authorization Requests (RFC 9126): the app sends the authorization request directly to PingOne and the browser carries only a short request_uri, so the parameters cannot be edited on the way."
+    },
+    {
+      "id": "jar",
+      "term": "JAR",
+      "definition": "JWT-Secured Authorization Request (RFC 9101): the authorization parameters travel in a signed request object. PingOne accepts the request parameter signed HS256 with the client secret; it does not advertise request_uri outside PAR."
+    },
+    {
+      "id": "client-credentials",
+      "term": "Client credentials",
+      "definition": "A token for an app acting as itself, with no user. PingOne grants only scopes of a resource assigned to the application, so the card needs such a scope in Settings."
+    },
+    {
+      "id": "token-lifecycle",
+      "term": "Token lifecycle",
+      "definition": "Refresh a token, introspect it, revoke it, and then try to refresh with the revoked refresh token, which PingOne must refuse. The card shows that refusal as expected."
+    },
+    {
+      "id": "userinfo",
+      "term": "Userinfo",
+      "definition": "The endpoint that returns the signed-in user's claims. What comes back depends on the scopes the application was granted (profile, email, address, phone); with only openid there is just a subject."
+    },
+    {
+      "id": "device-authorization",
+      "term": "Device authorization",
+      "definition": "RFC 8628: a device with no browser shows a user code and a link; the person approves on another device while the app polls for the token."
+    },
+    {
+      "id": "ciba",
+      "term": "CIBA",
+      "definition": "Client-Initiated Backchannel Authentication: the app asks PingOne to get approval from a named user on their own device and polls for the result. PingOne advertises poll delivery only. The lab has no approve button."
+    },
+    {
+      "id": "token-exchange",
+      "term": "Token exchange",
+      "definition": "RFC 8693: a token is traded for a new one, for example for another audience. With an actor set, the new token carries an act claim saying who is acting for whom."
+    },
+    {
+      "id": "workspace",
+      "term": "Workspace",
+      "definition": "A name (lowercase letters, digits, hyphens) that keeps one presenter's sign-in, runs and traces apart from another's on the same lab. Reset clears the current workspace only."
+    }
+  ],
+  "sources": [
+    {
+      "id": "rfc7636",
+      "title": "PKCE (RFC 7636)",
+      "url": "https://www.rfc-editor.org/rfc/rfc7636",
+      "kind": "spec",
+      "use": "Background for the PKCE card.",
+      "status": "not-read",
+      "checked": "2026-10-31"
+    },
+    {
+      "id": "rfc9126",
+      "title": "Pushed Authorization Requests (RFC 9126)",
+      "url": "https://www.rfc-editor.org/rfc/rfc9126",
+      "kind": "spec",
+      "use": "Background for the PAR card.",
+      "status": "not-read",
+      "checked": "2026-10-31"
+    },
+    {
+      "id": "rfc9101",
+      "title": "JWT-Secured Authorization Request (RFC 9101)",
+      "url": "https://www.rfc-editor.org/rfc/rfc9101",
+      "kind": "spec",
+      "use": "Background for the JAR card.",
+      "status": "not-read",
+      "checked": "2026-10-31"
+    },
+    {
+      "id": "rfc8628",
+      "title": "Device Authorization Grant (RFC 8628)",
+      "url": "https://www.rfc-editor.org/rfc/rfc8628",
+      "kind": "spec",
+      "use": "Background for the device card.",
+      "status": "not-read",
+      "checked": "2026-10-31"
+    },
+    {
+      "id": "rfc8693",
+      "title": "Token Exchange (RFC 8693)",
+      "url": "https://www.rfc-editor.org/rfc/rfc8693",
+      "kind": "spec",
+      "use": "Background for the token exchange card.",
+      "status": "not-read",
+      "checked": "2026-10-31"
+    }
+  ],
+  "cards": [
+    {
+      "id": "start-the-lab",
+      "label": "Start the lab and check it",
+      "group": "setup",
+      "description": "Run npm start, then npm run doctor in another terminal. Mock mode needs no settings.",
+      "terms": [
+        "mock-live",
+        "workspace"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/"
+      }
+    },
+    {
+      "id": "connect-your-pingone",
+      "label": "Connect your PingOne",
+      "group": "setup",
+      "description": "Set your environment id and region in Settings, then switch to Live. The discovery check lists what your environment advertises.",
+      "terms": [
+        "mock-live",
+        "advertised-only"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/settings"
+      }
+    },
+    {
+      "id": "signin",
+      "label": "Sign in (pi.flow)",
+      "group": "try-it",
+      "description": "Sign in with the lab's own form; PingOne still decides. Try a wrong password.",
+      "terms": [
+        "pi-flow",
+        "flow-status"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/signin"
+      }
+    },
+    {
+      "id": "pkce",
+      "label": "PKCE",
+      "group": "try-it",
+      "description": "Bind the authorization code to the app that asked.",
+      "terms": [
+        "pkce",
+        "pi-flow"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/pkce"
+      }
+    },
+    {
+      "id": "par",
+      "label": "PAR",
+      "group": "try-it",
+      "description": "Push the authorization request straight to PingOne.",
+      "terms": [
+        "par",
+        "pi-flow"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/par"
+      }
+    },
+    {
+      "id": "jar",
+      "label": "Signed request object (JAR)",
+      "group": "try-it",
+      "description": "Sign the authorization parameters in a request object.",
+      "terms": [
+        "jar",
+        "pi-flow"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/jar"
+      }
+    },
+    {
+      "id": "client-credentials",
+      "label": "Client credentials",
+      "group": "try-it",
+      "description": "A token for an agent acting as itself.",
+      "terms": [
+        "client-credentials"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/clientCredentials"
+      }
+    },
+    {
+      "id": "lifecycle",
+      "label": "Token lifecycle",
+      "group": "try-it",
+      "description": "Refresh, introspect, revoke, then try the revoked token.",
+      "terms": [
+        "token-lifecycle"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/lifecycle"
+      }
+    },
+    {
+      "id": "userinfo",
+      "label": "Userinfo",
+      "group": "try-it",
+      "description": "Read the signed-in user's claims from PingOne.",
+      "terms": [
+        "userinfo"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/userinfo"
+      }
+    },
+    {
+      "id": "device",
+      "label": "Device authorization",
+      "group": "try-it",
+      "description": "A token for something with no browser.",
+      "terms": [
+        "device-authorization"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/device"
+      }
+    },
+    {
+      "id": "ciba",
+      "label": "CIBA",
+      "group": "try-it",
+      "description": "Start a backchannel request and poll for the approval.",
+      "terms": [
+        "ciba"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/ciba"
+      }
+    },
+    {
+      "id": "token-exchange",
+      "label": "Token exchange",
+      "group": "try-it",
+      "description": "Trade the user's token for another, with an actor.",
+      "terms": [
+        "token-exchange"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/tokenExchange"
+      }
+    },
+    {
+      "id": "flows-api",
+      "label": "Flows API: open and read a pi.flow",
+      "group": "concept",
+      "description": "Open a flow and read it without sending a password; the guide explains each field.",
+      "terms": [
+        "pi-flow",
+        "flow-status"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/run/piflow"
+      }
+    },
+    {
+      "id": "playground",
+      "label": "Protocol Playground",
+      "group": "try-it",
+      "description": "Pick a protocol, change a parameter, run it, compare.",
+      "terms": [
+        "pkce",
+        "par",
+        "jar"
+      ],
+      "action": {
+        "type": "route",
+        "href": "/#/playground"
+      }
+    }
+  ]
+}

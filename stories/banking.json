@@ -1,0 +1,23 @@
+{
+  "label": "Banking",
+  "cast": {
+    "company": "Harbor Mutual",
+    "user": "Dana",
+    "agent": "Ledger",
+    "service": "the payments service",
+    "payee": "Ridge Utilities"
+  },
+  "cards": {
+    "signin": "{{cast.user}} signs in to {{cast.company}} inside the app itself; PingOne checks the password, the app never sends it anywhere else.",
+    "pkce": "Even if someone catches the code meant for {{cast.agent}}, it is useless without the secret {{cast.agent}} kept back.",
+    "par": "{{cast.agent}} hands its whole request to PingOne first, so nothing in it can be changed on the way through the browser.",
+    "jar": "{{cast.agent}} signs its request to {{cast.company}}, so PingOne can tell that nobody edited the scope or the redirect on the way.",
+    "clientCredentials": "At {{cast.company}}, the {{cast.serviceWord}} gets a token for itself, with no {{cast.userWord}} in the picture.",
+    "lifecycle": "{{cast.agent}} keeps {{cast.user}}'s session alive with a refresh token, until {{cast.company}} revokes it and the next refresh is refused.",
+    "userinfo": "{{cast.agent}} reads who {{cast.user}} is from PingOne, with {{cast.user}}'s own access token.",
+    "device": "{{cast.user}} links the {{cast.company}} TV app by typing a short code on the phone; the TV never sees the password.",
+    "ciba": "{{cast.agent}} needs {{cast.user}}'s go-ahead while {{cast.user}} is away from the app: PingOne asks on {{cast.user}}'s own device and {{cast.agent}} waits.",
+    "tokenExchange": "{{cast.user}}'s token is exchanged for one {{cast.agent}} can use, and the new token still says who acted for whom.",
+    "piflow": "{{cast.company}}'s own app renders the sign-in: PingOne answers with JSON instead of a login page."
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "schema": "diagram-studio/1",
+  "id": "p1l-device",
+  "title": "Device authorization",
+  "lede": "The person signs in on another device while the app polls.",
+  "groups": {
+    "lab": {
+      "label": "This lab",
+      "color": "dark"
+    },
+    "p1": {
+      "label": "Your PingOne",
+      "color": "blue"
+    },
+    "person": {
+      "label": "The person",
+      "color": "green"
+    }
+  },
+  "nodes": [
+    {
+      "id": "lab",
+      "group": "lab",
+      "label": "This lab (server)",
+      "sub": [
+        "Holds verifiers, cookies, tokens"
+      ],
+      "x": 0,
+      "y": 160
+    },
+    {
+      "id": "dev",
+      "group": "p1",
+      "label": "Device authorization endpoint",
+      "sub": [
+        "user_code + address"
+      ],
+      "x": 360,
+      "y": 0
+    },
+    {
+      "id": "page",
+      "group": "p1",
+      "label": "PingOne verification page",
+      "sub": [
+        "Signs the person in"
+      ],
+      "x": 360,
+      "y": 200
+    },
+    {
+      "id": "person",
+      "group": "person",
+      "label": "The person",
+      "sub": [
+        "Phone or laptop"
+      ],
+      "x": 720,
+      "y": 200
+    },
+    {
+      "id": "token",
+      "group": "p1",
+      "label": "Token endpoint",
+      "sub": [
+        "device_code grant"
+      ],
+      "x": 360,
+      "y": 400
+    }
+  ],
+  "edges": [
+    {
+      "source": "lab",
+      "target": "dev",
+      "label": "client_id + scope"
+    },
+    {
+      "source": "dev",
+      "target": "lab",
+      "label": "user_code, device_code"
+    },
+    {
+      "source": "person",
+      "target": "page",
+      "label": "enter code, sign in"
+    },
+    {
+      "source": "lab",
+      "target": "token",
+      "label": "poll with device_code"
+    },
+    {
+      "source": "token",
+      "target": "lab",
+      "label": "tokens once approved"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Code",
+      "what": "PingOne gives a short user code and an address.",
+      "edges": [
+        0,
+        1
+      ]
+    },
+    {
+      "title": "Person",
+      "what": "The person enters the code at PingOne on any device.",
+      "edges": [
+        2
+      ]
+    },
+    {
+      "title": "Poll",
+      "what": "The lab polls until PingOne answers with tokens.",
+      "edges": [
+        3,
+        4
+      ]
+    }
+  ]
+}

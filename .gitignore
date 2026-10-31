@@ -1,0 +1,15 @@
+node_modules
+.env
+.data
+dist
+*.log
+customer.config.json
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+pingone-lab.json
+*.settings.json

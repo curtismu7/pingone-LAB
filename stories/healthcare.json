@@ -1,0 +1,23 @@
+{
+  "label": "Healthcare",
+  "cast": {
+    "company": "Ridgeview Clinic",
+    "user": "Sam",
+    "agent": "Triage",
+    "service": "the records service",
+    "payee": "the pharmacy"
+  },
+  "cards": {
+    "signin": "{{cast.user}} signs in to {{cast.company}}'s portal through the portal's own form; the password goes only to PingOne.",
+    "pkce": "A stolen authorization code cannot be redeemed without the verifier {{cast.agent}} never sent.",
+    "par": "{{cast.agent}}'s request is pushed to PingOne up front and referred to by a one-time handle.",
+    "jar": "{{cast.agent}}'s request travels as a signed object, so a changed scope would break the signature.",
+    "clientCredentials": "At {{cast.company}}, the {{cast.serviceWord}} authenticates as itself to fetch reference data, with no patient involved.",
+    "lifecycle": "{{cast.agent}}'s access to {{cast.user}}'s records is renewed, checked, then cut off when {{cast.company}} revokes it.",
+    "userinfo": "The portal confirms who {{cast.user}} is by asking PingOne with {{cast.user}}'s token.",
+    "device": "{{cast.user}} signs in on the waiting-room kiosk by entering a code on a phone.",
+    "ciba": "{{cast.agent}} wants {{cast.user}}'s consent before sharing a result; the request lands on {{cast.user}}'s phone, not in the agent's window.",
+    "tokenExchange": "A request from {{cast.user}} passes through {{cast.agent}}, and the exchanged token records it.",
+    "piflow": "The portal drives PingOne's sign-in through an API and shows its own screens."
+  }
+}

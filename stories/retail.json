@@ -1,0 +1,23 @@
+{
+  "label": "Retail",
+  "cast": {
+    "company": "Copperline Outfitters",
+    "user": "Alex",
+    "agent": "Scout",
+    "service": "the order service",
+    "payee": "Copperline"
+  },
+  "cards": {
+    "signin": "{{cast.user}} signs in to {{cast.company}} in the store's own page, driven through PingOne's API.",
+    "pkce": "A code meant for {{cast.agent}} is worthless to anyone who lacks {{cast.agent}}'s verifier.",
+    "par": "{{cast.agent}} pushes the order request to PingOne before the user sees anything.",
+    "jar": "{{cast.agent}} signs its sign-in request, so a tampered request is refused.",
+    "clientCredentials": "At {{cast.company}}, the {{cast.serviceWord}} gets its own token to talk to the warehouse, with no shopper involved.",
+    "lifecycle": "{{cast.agent}}'s shopping session is refreshed, checked and then revoked when {{cast.user}} signs out everywhere.",
+    "userinfo": "{{cast.agent}} reads {{cast.user}}'s profile from PingOne with {{cast.user}}'s own token.",
+    "device": "{{cast.user}} signs in to the in-store screen by typing a code on a phone.",
+    "ciba": "{{cast.agent}} found a deal but needs {{cast.user}}'s yes; PingOne asks {{cast.user}} out of band.",
+    "tokenExchange": "{{cast.user}}'s token is exchanged so {{cast.agent}} can act for {{cast.user}}, and the new token says so.",
+    "piflow": "{{cast.company}}'s checkout renders the sign-in steps from PingOne's JSON."
+  }
+}

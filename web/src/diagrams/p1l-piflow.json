@@ -1,0 +1,82 @@
+{
+  "schema": "diagram-studio/1",
+  "id": "p1l-piflow",
+  "title": "Flows API: open a pi.flow",
+  "lede": "Open a flow and read it back; no credential is sent.",
+  "groups": {
+    "lab": {
+      "label": "This lab",
+      "color": "dark"
+    },
+    "p1": {
+      "label": "Your PingOne",
+      "color": "blue"
+    }
+  },
+  "nodes": [
+    {
+      "id": "lab",
+      "group": "lab",
+      "label": "This lab (server)",
+      "sub": [
+        "Holds verifiers, cookies, tokens"
+      ],
+      "x": 0,
+      "y": 160
+    },
+    {
+      "id": "authz",
+      "group": "p1",
+      "label": "Authorization endpoint",
+      "sub": [
+        "response_mode=pi.flow"
+      ],
+      "x": 360,
+      "y": 40
+    },
+    {
+      "id": "flows",
+      "group": "p1",
+      "label": "Flows API",
+      "sub": [
+        "GET <env>/flows/{id}"
+      ],
+      "x": 360,
+      "y": 280
+    }
+  ],
+  "edges": [
+    {
+      "source": "lab",
+      "target": "authz",
+      "label": "GET authorize"
+    },
+    {
+      "source": "authz",
+      "target": "lab",
+      "label": "flow JSON"
+    },
+    {
+      "source": "lab",
+      "target": "flows",
+      "label": "GET the flow"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Open",
+      "what": "PingOne opens a flow and answers as JSON.",
+      "edges": [
+        0,
+        1
+      ]
+    },
+    {
+      "title": "Read",
+      "what": "The lab reads it back; nothing is posted.",
+      "edges": [
+        2
+      ]
+    }
+  ]
+}

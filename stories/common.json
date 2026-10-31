@@ -1,0 +1,19 @@
+{
+  "intro": [
+    "{{cast.company}} lets {{cast.agent}}, its {{cast.agentWord}}, act for its {{cast.userWord}}s. Every card below is one thing PingOne does to keep that safe, run live against your PingOne.",
+    "Nothing here is simulated: each call goes to PingOne and comes back as a raw trace, with secrets redacted and tokens masked. Only what your PingOne advertises is offered."
+  ],
+  "cards": [
+    "signin",
+    "pkce",
+    "par",
+    "jar",
+    "clientCredentials",
+    "lifecycle",
+    "userinfo",
+    "device",
+    "ciba",
+    "tokenExchange",
+    "piflow"
+  ]
+}

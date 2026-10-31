@@ -1,0 +1,124 @@
+{
+  "schema": "diagram-studio/1",
+  "id": "p1l-ciba",
+  "title": "CIBA",
+  "lede": "The app names a user; PingOne asks that user on their own device; the app polls.",
+  "groups": {
+    "lab": {
+      "label": "This lab",
+      "color": "dark"
+    },
+    "p1": {
+      "label": "Your PingOne",
+      "color": "blue"
+    },
+    "person": {
+      "label": "The person",
+      "color": "green"
+    }
+  },
+  "nodes": [
+    {
+      "id": "lab",
+      "group": "lab",
+      "label": "This lab (server)",
+      "sub": [
+        "Holds verifiers, cookies, tokens"
+      ],
+      "x": 0,
+      "y": 160
+    },
+    {
+      "id": "bc",
+      "group": "p1",
+      "label": "Backchannel endpoint",
+      "sub": [
+        "<env>/as/cibaAuthorization"
+      ],
+      "x": 360,
+      "y": 0
+    },
+    {
+      "id": "auth",
+      "group": "p1",
+      "label": "PingOne authenticator",
+      "sub": [
+        "CIBA flow on the app"
+      ],
+      "x": 360,
+      "y": 200
+    },
+    {
+      "id": "person",
+      "group": "person",
+      "label": "The user",
+      "sub": [
+        "Approves or denies"
+      ],
+      "x": 720,
+      "y": 200
+    },
+    {
+      "id": "token",
+      "group": "p1",
+      "label": "Token endpoint",
+      "sub": [
+        "CIBA grant, poll mode"
+      ],
+      "x": 360,
+      "y": 400
+    }
+  ],
+  "edges": [
+    {
+      "source": "lab",
+      "target": "bc",
+      "label": "login_hint, binding_message"
+    },
+    {
+      "source": "bc",
+      "target": "lab",
+      "label": "auth_req_id"
+    },
+    {
+      "source": "auth",
+      "target": "person",
+      "label": "approval request"
+    },
+    {
+      "source": "lab",
+      "target": "token",
+      "label": "poll with auth_req_id"
+    },
+    {
+      "source": "token",
+      "target": "lab",
+      "label": "tokens or access_denied"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Ask",
+      "what": "The lab names the user; PingOne returns a request id.",
+      "edges": [
+        0,
+        1
+      ]
+    },
+    {
+      "title": "Approve",
+      "what": "PingOne's own authenticator asks the user.",
+      "edges": [
+        2
+      ]
+    },
+    {
+      "title": "Poll",
+      "what": "The lab polls until approved, denied or expired.",
+      "edges": [
+        3,
+        4
+      ]
+    }
+  ]
+}

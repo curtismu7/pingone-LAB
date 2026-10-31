@@ -1,0 +1,16 @@
+# Live mode and https. Use together with docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.live.yml up --build -d
+# or put  COMPOSE_FILE=docker-compose.yml:docker-compose.live.yml  in your .env (not committed) and run plain
+# `docker compose up --build -d`. Needs P1LAB_TLS_CERT_FILE and P1LAB_TLS_KEY_FILE in .env (see .env.example).
+# The port stays published on 127.0.0.1 only (set in docker-compose.yml).
+services:
+  pingone-lab:
+    environment:
+      # The lab serves https with this certificate (it must cover 127.0.0.1, localhost and LAB_ALLOWED_HOSTS).
+      LAB_TLS_CERT: /tls/cert.pem
+      LAB_TLS_KEY: /tls/key.pem
+    volumes:
+      # Only the lab's own settings folder (mode 700, file mode 600); nothing else from ~/.config is mounted.
+      - ${P1LAB_CONFIG_DIR:-${HOME}/.config/demo-kit/pingone-lab}:/config
+      - ${P1LAB_TLS_CERT_FILE:?set P1LAB_TLS_CERT_FILE in .env}:/tls/cert.pem:ro
+      - ${P1LAB_TLS_KEY_FILE:?set P1LAB_TLS_KEY_FILE in .env}:/tls/key.pem:ro
