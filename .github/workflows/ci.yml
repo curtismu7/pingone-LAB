@@ -49,14 +49,20 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       # The checker lives in the demo-kit-base repo (it is not shipped into demo repos yet). Hosted runners cannot read
-      # that repo without a token: set the repository secret DEMO_KIT_BASE_TOKEN (read access) to turn this check on.
-      # Without it the job passes with a warning, so read the log: UNVERIFIED means the check did not run.
+      # that repo without a token. The owner sets the repository secret DEMO_KIT_BASE_TOKEN (read access) and the
+      # repository variable DEMO_KIT_BASE_REPO (owner/name). Until both exist this job FAILS, so a green rollup always
+      # means the check ran. Pull requests from forks cannot read secrets, so they only warn.
       - name: Rule conformance (--new)
         env:
           DEMO_KIT_BASE_TOKEN: ${{ secrets.DEMO_KIT_BASE_TOKEN }}
+          DEMO_KIT_BASE_REPO: ${{ vars.DEMO_KIT_BASE_REPO }}
+          FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
-          if [ -z "$DEMO_KIT_BASE_TOKEN" ]; then echo "::warning::conformance NOT RUN (UNVERIFIED): secret DEMO_KIT_BASE_TOKEN is not set"; exit 0; fi
-          git clone --depth 1 "https://x-access-token:${DEMO_KIT_BASE_TOKEN}@github.com/cmuir_pingcorp/demo-kit-base.git" "$RUNNER_TEMP/demo-kit-base"
+          if [ -z "$DEMO_KIT_BASE_TOKEN" ] || [ -z "$DEMO_KIT_BASE_REPO" ]; then
+            if [ "$FORK_PR" = "true" ]; then echo "::warning::conformance NOT RUN (fork PR cannot read secrets)"; exit 0; fi
+            echo "::error::conformance cannot run: set the secret DEMO_KIT_BASE_TOKEN and the variable DEMO_KIT_BASE_REPO"; exit 1
+          fi
+          git clone --depth 1 "https://x-access-token:${DEMO_KIT_BASE_TOKEN}@github.com/${DEMO_KIT_BASE_REPO}.git" "$RUNNER_TEMP/demo-kit-base"
           node "$RUNNER_TEMP/demo-kit-base/scripts/conformance.mjs" . --new
 
   docker:

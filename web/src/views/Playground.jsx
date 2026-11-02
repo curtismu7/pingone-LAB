@@ -92,14 +92,14 @@ function FlowPanel({ flowId, ready, onChanged, signedInAs }) {
   );
 }
 
-export default function Playground({ cards, onChanged, signedInAs = null, mock = false }) {
+export default function Playground({ cards, onChanged, signedInAs = null, mock = null }) {
   const [flowId, setFlowId] = useState(FLOW_IDS[0]);
   const readyOf = (id) => (id === 'discovery' ? cards.find((c) => c.id === 'playground')?.ready : cards.find((c) => c.id === id)?.ready);
   return (
     <section aria-labelledby="pg-title" className="playground">
       <p className="crumbs"><a href="#/">Shelf</a> / Playground</p>
       <h2 id="pg-title">PingOne Protocol Playground</h2>
-      <p className="explain">Every flow, step by step. Execute one step at a time or run them all; each step calls the same lab endpoint as its card, and the lab calls {mock ? 'the in-lab mock PingOne' : 'your PingOne'}.</p>
+      <p className="explain">Every flow, step by step. Execute one step at a time or run them all; each step calls the same lab endpoint as its card, and the lab calls {mock === null ? 'PingOne' : mock ? 'the in-lab mock PingOne' : 'your PingOne'}.</p>
       <div className="pg">
         <nav className="pg-nav" aria-label="Flows">
           {FLOW_IDS.map((id) => (
