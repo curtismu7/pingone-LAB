@@ -4,9 +4,11 @@ Every PingOne feature for apps and AI agents on one shelf, run against a simulat
 
 ## Tier, repo and catalog
 
-- Tier: Demo
-- Repo: https://github.com/ping-sandbox/pingone-LAB (planned; not created yet)
-- Catalog: none. No row in the shelf catalog matches a PingOne protocol lab, so there is no catalog id yet; the owner assigns one. `content-pack.json` stays unvalidated until then (it needs `demo.catalog`).
+Tier: Demo
+
+Repo: https://github.com/ping-sandbox/pingone-LAB
+
+Catalog: A29 (accepted by the owner, 2026-10-31); `content-pack.json` carries it in `demo.catalog`.
 
 The PingFederate LAB's twin for PingOne: one card per thing PingOne can actually do (what its discovery document
 advertises), plus a Protocol Playground. Each card shows every request and response, with secrets redacted on the
@@ -29,16 +31,16 @@ Rules: `~/Development/STANDALONE-RULES-FOR-AGENTS.md` and `~/Development/STANDAL
 Prerequisites: Node 26 (Docker only for the Docker form).
 
 ```sh
-git clone https://github.com/ping-sandbox/pingone-LAB.git   # once the repo exists
+git clone https://github.com/ping-sandbox/pingone-LAB.git
 cd pingone-LAB
 npm install
 npm run build        # builds web/dist, which the server serves
 npm start            # http://127.0.0.1:5500 (loopback only)
 ```
 
-Open http://127.0.0.1:5500. With no setup, the lab starts in **Mock** and every card works: sign in with the demo user
-shown in the dialog (mock sign-in needs `ALLOW_MOCK_SIGNIN=1`, so start with
-`ALLOW_MOCK_SIGNIN=1 npm start`). `npm run dev:web` runs Vite on 127.0.0.1:5501 for development.
+Open http://127.0.0.1:5500. With no setup, the lab starts in **Mock** and every card works: plain `npm start` turns
+mock sign-in on by itself (loopback bind, no PingOne environment configured), so sign in with the demo user shown in the
+dialog. `npm run dev:web` runs Vite on 127.0.0.1:5501 for development.
 
 ## Settings file
 
@@ -76,6 +78,10 @@ If the port is taken:
    PORT=5501 npm start
 4. Do not use 8080, 5173, 3000, 4000, 4400, 4510, 4600-4601, 18080, 19080 or 19090.
 
+To remap a port, set `PORT` and the published port to the same number (in Docker: the `ports` entry, `PORT` and the
+health-check port in `docker-compose.yml`), because the Host check only accepts the port the lab listens on.
+`LAB_ALLOWED_HOSTS` (comma-separated host names that point at this Mac) adds extra names.
+
 ## Mock and live modes
 
 The header's **Mock / Live** toggle (on every page, presenter mode included) switches the whole lab, and the banner
@@ -86,7 +92,9 @@ says which mode is on. The choice is saved in the settings file (`mode`). With n
   sits behind a netguard (`server/src/netguard.js`) that refuses anything in mock mode. The server runs the
   netguard's self-test at startup and refuses to start if it fails; a test runs every card in mock mode with no
   settings file and asserts zero real outbound attempts. `/api/health` says `runtime: offline`.
-- **Mock sign-in** (rule 11): needs `ALLOW_MOCK_SIGNIN=1` (set in `docker-compose.yml`); refused behind a proxy
+- **Mock sign-in** (rule 11): needs `ALLOW_MOCK_SIGNIN=1`. Docker sets it in `docker-compose.yml`; plain `npm start`
+  sets it for you when the lab binds loopback and no PingOne environment is configured (`ALLOW_MOCK_SIGNIN=0` turns it
+  off, and a configured environment or a wider bind leaves it off). It is refused behind a proxy
   (`Forwarded`, `X-Forwarded-*`, `Via`) and on a non-loopback bind. Docker binds 0.0.0.0 inside the container
   (`LAB_IN_CONTAINER=1`, honoured only when the process really is in a container: `/.dockerenv` or a container
   runtime in the cgroup of process 1) while compose publishes 127.0.0.1 only. `NODE_ENV=production` is **not** a
@@ -134,13 +142,17 @@ scripts/check-ui-standard.sh   # the vendored shared stylesheet matches the cano
 ~/Development/AI-DEMO-Standalone/scripts/check-css.sh .   # CSS standard
 ```
 
-On Node 26 (v26.8.2): server 116/116, web 62/62.
+`npm test` runs both workspaces even when one fails. `npm run smoke` drives all 11 flows in Mock through a real browser
+(Playwright; run `npx playwright install chromium` once; CI runs it too).
+
+On Node 26 (v26.8.2): server 118/118, web 67/67; smoke 28/28 checks.
 
 ## Troubleshooting
 
 1. **A card says "Not advertised".** Your PingOne does not offer that feature; nothing is broken. Settings > discovery
    check lists what it advertises.
-2. **"Mock sign-in is off".** Start with `ALLOW_MOCK_SIGNIN=1` (Docker sets it). It is refused behind a proxy.
+2. **"Mock sign-in is off".** With a PingOne environment configured (or `ALLOW_MOCK_SIGNIN=0`), start with
+   `ALLOW_MOCK_SIGNIN=1 npm start`. Docker sets it. It is refused behind a proxy.
 3. **"Sign-in expired (404)".** A pi.flow lives 15 minutes. Press Run again.
 4. **The port is taken.** See "Ports" above.
 5. **Everything signed out after a rebuild.** Sessions are in memory only; sign in again.
@@ -190,6 +202,9 @@ Not here, because PingOne does not advertise them: DPoP, rich authorization requ
 registration, ID-JAG, the `claims` parameter, `request_uri` outside PAR. The discovery check in Settings lists them
 as "not advertised".
 
+**Intentionally not in this lab (owner decision):** DPoP, RAR, ID-JAG, SPIFFE, Transaction Tokens and Resource
+Metadata. DPoP and ID-JAG are PingFederate-only; see pingfederate-LAB and id-jag-standalone-LAB.
+
 ## How the PingOne flows run
 
 - **pi.flow sign-in** (Sign in, PKCE, PAR, JAR): the authorization request carries `response_mode=pi.flow`; PingOne
@@ -216,7 +231,7 @@ as "not advertised".
 The owner ran the lab against a real environment on 2026-10-30: discovery, the pi.flow open card (raw flow JSON),
 sign-in through pi.flow with the resume step, a wrong password refused as `INVALID_CREDENTIALS`, Userinfo with
 profile, email, address and phone claims, and client credentials. The rest follows PingOne's documented API and
-AI-DEMO2's working pi.flow driver, and is proven here only against the mock:
+the family's full sign-in demo (its working pi.flow driver), and is proven here only against the mock:
 
 - `user.lookup` on an identifier-first policy;
 - pi.flow after PAR (`response_mode` in the pushed request and repeated outside) and after JAR;

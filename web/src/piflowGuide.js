@@ -1,6 +1,6 @@
 // What the pi.flow card explains, for PingOne. Facts come from this lab's live runs against PingOne (2026-10-30:
-// the fields of the first answer, the 15-minute expiry) and from AI-DEMO2's PingOne pi.flow driver
-// (demo_api_server/services/piFlowDriver.js) for the statuses this lab does not drive itself.
+// the fields of the first answer, the 15-minute expiry) and from the family's full sign-in demo's PingOne pi.flow
+// driver for the statuses this lab does not drive itself.
 export const PIFLOW_GUIDE = {
   idp: 'PingOne',
   otherIdp: 'PingFederate',
@@ -44,7 +44,7 @@ export const PIFLOW_GUIDE = {
     { status: 'EXTERNAL_AUTHENTICATION_REQUIRED', meaning: 'The policy hands sign-in to an external identity provider.', app: 'Send the person to the link PingOne gives.', lab: 'Stops and shows the status.' },
     { status: 'COMPLETED', meaning: 'Sign-in is done.', app: 'Call resumeUrl for the code, then redeem it.', lab: 'Drives it.' },
   ],
-  statusesNote: 'The first three and COMPLETED are what this lab drives. The four MFA and external statuses are handled by AI-DEMO2\'s PingOne sign-in, not here; give the lab\'s applications a password-only sign-on policy to stay on the driven path.',
+  statusesNote: 'The first three and COMPLETED are what this lab drives. The four MFA and external statuses are handled by the family\'s full sign-in demo, not here; give the lab\'s applications a password-only sign-on policy to stay on the driven path.',
   when: {
     good: [
       'First-party apps: your own mobile, desktop or command-line app that needs its own sign-in screen.',

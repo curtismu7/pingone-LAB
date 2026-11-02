@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { FLOWS, FLOW_IDS, needsStep, runStep, stepSentence, proofPoints, traceToDiagram, latestTrace, endpointName } from './flows.js';
 import { validateDiagram } from './diagrams/validate.js';
 import { mockServer, hop } from './testApi.js';
+import { SPEC } from './content.js';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -115,5 +116,23 @@ describe('live sequence diagram', () => {
   it('stays within the studio limits for a very long trace', () => {
     const trace = Array.from({ length: 200 }, (_, i) => hop(`h${i}`, `Call ${i}`, 'POST', `${P1}/as/token`, 200));
     expect(validateDiagram(traceToDiagram(trace))).toEqual([]);
+  });
+});
+
+describe('spec notes', () => {
+  it('every flow has one, with a link only to a public spec host', () => {
+    expect(Object.keys(SPEC).sort()).toEqual([...FLOW_IDS].sort());
+    for (const id of FLOW_IDS) {
+      for (const field of ['solves', 'example', 'agents']) expect([id, field, SPEC[id][field].length > 20]).toEqual([id, field, true]);
+      for (const ref of SPEC[id].refs) expect(ref.url).toMatch(/^https:\/\/(www\.rfc-editor\.org\/rfc\/rfc\d+|openid\.net\/specs\/)/);
+    }
+  });
+});
+
+describe('live diagram wording follows the mode', () => {
+  const trace = (mock) => [{ ...hop('token', 'Token', 'POST', `${P1}/as/token`, 200), ...(mock ? { mock: true } : {}) }];
+  it('names the mock when the calls were answered by it, and says every call is real otherwise', () => {
+    expect(traceToDiagram(trace(true)).nodes[0].sub).toEqual(['Calls the in-lab mock PingOne']);
+    expect(traceToDiagram(trace(false)).nodes[0].sub).toEqual(['Every call below is real']);
   });
 });

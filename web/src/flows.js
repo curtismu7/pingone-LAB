@@ -197,7 +197,9 @@ const PER_ROW = 3;
 export function traceToDiagram(trace, title = 'This run, call by call') {
   const calls = (trace || []).filter((s) => s?.request && Number.isInteger(s?.response?.status));
   if (!calls.length) return null;
-  const nodes = [{ id: 'lab', group: 'lab', label: 'This lab (server)', sub: ['Every call below is real'], x: 0, y: 0 }];
+  // A trace step answered by the in-process mock says so (s.mock): the first box then names the mock, not a real PingOne.
+  const mock = calls.some((s) => s.mock);
+  const nodes = [{ id: 'lab', group: 'lab', label: 'This lab (server)', sub: [mock ? 'Calls the in-lab mock PingOne' : 'Every call below is real'], x: 0, y: 0 }];
   const edges = [];
   const steps = [];
   calls.forEach((s, i) => {
