@@ -140,9 +140,10 @@ health check works with and without https.
 npm test             # server: node --test test/*.test.js; web: vitest
 scripts/check-ui-standard.sh   # the vendored shared stylesheet matches the canonical copy (and the hash pinned in scripts/standalone-ui.sha256, which CI checks)
 ~/Development/AI-DEMO-Standalone/scripts/check-css.sh .   # CSS standard
+node ~/Development/demo-kit-base/scripts/conformance.mjs . --new   # rule conformance
 ```
 
-`npm test` runs both workspaces even when one fails. `npm run smoke` drives all 11 flows in Mock through a real browser
+CI does not run the conformance check: the script is not shipped into demo CI yet (base-sync), so run the line above by hand before a PR. `npm test` runs both workspaces even when one fails. `npm run smoke` drives all 11 flows in Mock through a real browser
 (Playwright; run `npx playwright install chromium` once; CI runs it too).
 
 On Node 26 (v26.8.2): server 118/118, web 67/67; smoke 28/28 checks.
