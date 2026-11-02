@@ -158,6 +158,12 @@ On Node 26 (v26.8.2): server 118/118, web 67/67; smoke 28/28 checks.
 4. **The port is taken.** See "Ports" above.
 5. **Everything signed out after a rebuild.** Sessions are in memory only; sign in again.
 
+## Related labs
+
+- **pingone-signin-LAB** teaches how a pi.flow sign-in behaves when it goes wrong or asks for more: failures, lockout, replay, MFA, step-up (RFC 9470) and CIBA with a mock phone. It is mock only; the real PingOne response shapes and live runs are here.
+- **pingfederate-LAB** is the PingFederate twin of this lab (DPoP, RAR, DCR and the PingFederate-only flows).
+- **id-jag-standalone-LAB** covers ID-JAG, which only PingFederate supports.
+
 ## Ownership
 
 Owner: the PingOne demo owner (Demo tier, the Ping demo family). Licence: not set yet (the owner decides before the
