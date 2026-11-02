@@ -5,6 +5,7 @@ import Steps from './Steps.jsx';
 import Credentials from './Credentials.jsx';
 import Readiness from './Readiness.jsx';
 import PiFlowGuide from './PiFlowGuide.jsx';
+import SpecNote from './SpecNote.jsx';
 import { useFlowRun } from '../useFlowRun.js';
 import { CARD_DIAGRAM } from '../diagrams/index.js';
 import { EXPLAIN } from '../content.js';
@@ -47,6 +48,7 @@ export default function RunView({ card, story, onChanged, autoStart = false, onA
         <h2 id="run-title">{card.title}</h2>
         <Readiness card={card} />
       </header>
+      <SpecNote flowId={card.id} />
       {story && <p className="story">{story}</p>}
       <p className="explain">{EXPLAIN[card.id]}</p>
       {notAdvertised && (

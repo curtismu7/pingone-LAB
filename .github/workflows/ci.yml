@@ -44,6 +44,52 @@ jobs:
         env:
           PORT: "5549"
 
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # The checker lives in the demo-kit-base repo (it is not shipped into demo repos yet). Hosted runners cannot read
+      # that repo without a token: set the repository secret DEMO_KIT_BASE_TOKEN (read access) to turn this check on.
+      # Without it the job passes with a warning, so read the log: UNVERIFIED means the check did not run.
+      - name: Rule conformance (--new)
+        env:
+          DEMO_KIT_BASE_TOKEN: ${{ secrets.DEMO_KIT_BASE_TOKEN }}
+        run: |
+          if [ -z "$DEMO_KIT_BASE_TOKEN" ]; then echo "::warning::conformance NOT RUN (UNVERIFIED): secret DEMO_KIT_BASE_TOKEN is not set"; exit 0; fi
+          git clone --depth 1 "https://x-access-token:${DEMO_KIT_BASE_TOKEN}@github.com/cmuir_pingcorp/demo-kit-base.git" "$RUNNER_TEMP/demo-kit-base"
+          node "$RUNNER_TEMP/demo-kit-base/scripts/conformance.mjs" . --new
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker compose build
+      # Mock mode needs no .env and no certificate. The compose file publishes 127.0.0.1 only.
+      - run: docker compose up -d
+      - name: Health and page, by content
+        run: |
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:5500/api/health > health.json && break; sleep 2; done
+          cat health.json
+          grep -q '"schema":"demo-health/1"' health.json
+          grep -q '"runtime":"offline"' health.json
+          curl -fsS http://127.0.0.1:5500/ | grep -q 'id="root"'
+          curl -fsS http://127.0.0.1:5500/api/config | grep -q '"allowed":true'
+      - if: always()
+        run: docker compose down -v
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      # All 11 flows in Mock through the real UI, the Playground Tokens tab, and zero requests off the lab's origin.
+      - run: npm run smoke
+
   forbidden-strings:
     runs-on: ubuntu-latest
     steps:
