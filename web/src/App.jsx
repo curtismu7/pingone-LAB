@@ -176,7 +176,7 @@ export default function App() {
               autoStart={card.id === 'signin' && signInRequested} onAutoStarted={() => setSignInRequested(false)} />
           : cards.length > 0 && <p>Unknown card. <a href="#/">Back to the shelf</a></p>)}
         {route.view === 'settings' && <Settings focus={route.focus} onChanged={refresh} warnings={config?.customer?.warnings || []} />}
-        {route.view === 'playground' && <Playground cards={cards} onChanged={refresh} signedInAs={signedInAs} />}
+        {route.view === 'playground' && <Playground cards={cards} onChanged={refresh} signedInAs={signedInAs} mock={config ? config.mode === 'mock' : null} />}
       </main>
       <footer className="foot">
         <p>Live tokens are shown masked (first 6 and last 4 characters) and mock tokens whole, each with its decoded header and claims; secrets never leave the lab server. <a href="#/settings">Settings</a></p>

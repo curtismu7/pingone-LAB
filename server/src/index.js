@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import https from 'node:https';
-import { createApp } from './app.js';
+import { createApp, hostRunMockSignin } from './app.js';
 import { DEFAULT_PORT } from './settings.js';
 import { selfTest } from './netguard.js';
 
@@ -24,6 +24,11 @@ try { app = createApp({ port }); } catch (error) {
 for (const warning of app.locals.customerWarnings || []) console.warn(`customer.config: ${warning}`);
 // LAB_BIND=0.0.0.0 only inside Docker, where compose publishes the port on the Mac's 127.0.0.1 alone.
 const bind = process.env.LAB_BIND === '0.0.0.0' ? '0.0.0.0' : '127.0.0.1';
+// Plain `npm start` with no PingOne environment: mock sign-in on, so every card runs (rule 11 allows loopback).
+if (hostRunMockSignin({ env: process.env, bind, tenantConfigured: app.locals.tenantConfigured })) {
+  process.env.ALLOW_MOCK_SIGNIN = '1';
+  console.log('Mock mode on loopback with no PingOne environment: mock sign-in is on (set ALLOW_MOCK_SIGNIN=0 to turn it off).');
+}
 // LAB_TLS_CERT and LAB_TLS_KEY (PEM files): serve https with that certificate instead of http.
 const tls = process.env.LAB_TLS_CERT && process.env.LAB_TLS_KEY;
 let server = app;

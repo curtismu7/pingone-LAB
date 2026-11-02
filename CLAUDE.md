@@ -13,7 +13,7 @@ and ~/Development/STANDALONE-CSS-STANDARD.md (use the standalone-demo skill). Po
   (`server/test/fakep1.js`) is the same mock placed on PingOne's real host name.
 - Live: outbound ONLY to the configured environment (`https://auth.pingone.<region>/<environment id>/...`) through
   `server/src/outbound.js`; no other module but the netguard may call fetch.
-- Mock sign-in needs `ALLOW_MOCK_SIGNIN=1`; refused behind a proxy or on a non-loopback bind (`LAB_IN_CONTAINER=1`
+- Mock sign-in needs `ALLOW_MOCK_SIGNIN=1` (plain `npm start` sets it itself on a loopback bind with no PingOne environment: `hostRunMockSignin` in `server/src/app.js`; `=0` turns it off); refused behind a proxy or on a non-loopback bind (`LAB_IN_CONTAINER=1`
   marks the Docker case and only counts inside a real container). `NODE_ENV=production` is NOT a guard (the image sets it). Demo user `alice` / `correct-horse-battery` exists only in the mock.
 
 ## Look
@@ -25,7 +25,7 @@ and ~/Development/STANDALONE-CSS-STANDARD.md (use the standalone-demo skill). Po
 ## Run and test
 
 - Docker, mock with no setup: `docker compose up --build -d` -> http://127.0.0.1:5500. Live + https: `docker-compose.live.yml` (the local `.env` sets `COMPOSE_FILE` to both files; values for the cert and `LAB_ALLOWED_HOSTS` in the same `.env`) -> https://127.0.0.1:5500.
-- `npm install`, `npm run build`, `npm start` (127.0.0.1:5500), `npm test` (server: `node --test test/*.test.js`, a glob, never a directory; web: vitest).
+- `npm install`, `npm run build`, `npm start` (127.0.0.1:5500), `npm test` (runs server and web both: `node --test test/*.test.js`, a glob, never a directory; vitest), `npm run smoke` (Playwright: all 11 flows in Mock; needs `npx playwright install chromium`).
 - Node 26 only: `node --test test/*.test.js` (from `server/`).
 
 ## Rules that bite
