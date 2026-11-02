@@ -492,3 +492,60 @@ describe('workspace (rule 13)', () => {
     expect(screen.getByRole('button', { name: 'Switch' })).toBeDisabled();
   });
 });
+
+describe('spec notes, token tab and mock wording', () => {
+  it('every flow card shows its spec note under the title: standard badge and link, what it solves, an example, why it matters for agents', async () => {
+    mockServer(BASE_ROUTES());
+    go('#/run/pkce');
+    render(<App />);
+    const note = await screen.findByRole('complementary', { name: 'About this flow' });
+    expect(within(note).getByRole('link', { name: 'RFC 7636' })).toHaveAttribute('href', 'https://www.rfc-editor.org/rfc/rfc7636');
+    for (const label of ['What it solves', 'Real-world example', 'Why it matters for AI agents']) expect(within(note).getByText(label)).toBeInTheDocument();
+  });
+
+  it('the Playground shows the note under the flow title, and a Tokens tab with the access and ID tokens of the last settled step', async () => {
+    const claims = { sub: 'abc', scope: 'orders:read' };
+    mockServer({ ...BASE_ROUTES(), 'POST /api/cards/client-credentials/token': { outcome: 'accepted', accessToken: { masked: 'eyJhbG...abcd', length: 300, kind: 'JWT', claims }, trace: [hop('token', 'Token', 'POST', `${ISSUER}/token`, 200)] } });
+    go('#/playground');
+    render(<App />);
+    const nav = await screen.findByRole('navigation', { name: 'Flows' });
+    await userEvent.click(within(nav).getByRole('button', { name: /Client credentials/ }));
+    expect(within(screen.getByRole('complementary', { name: 'About this flow' })).getByRole('link', { name: 'RFC 6749 section 4.4' })).toBeInTheDocument();
+    const tokensTab = screen.getByRole('tab', { name: 'Tokens' });
+    await userEvent.click(tokensTab);
+    expect(tokensTab).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText(/No token yet/)).toBeVisible();
+    await userEvent.click(screen.getByRole('tab', { name: 'Run' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Run all' }));
+    await screen.findByText('PingOne accepted the token request: 200');
+    await userEvent.click(tokensTab);
+    const panel = screen.getByRole('tabpanel', { name: 'Tokens' });
+    expect(within(panel).getByRole('heading', { name: 'Access token' })).toBeVisible();
+    expect(within(panel).getByText(/orders:read/)).toBeVisible();
+  });
+
+  it('the Playground intro says which PingOne it calls, by mode', async () => {
+    mockServer({ ...BASE_ROUTES(null), 'GET /api/config': { ...BASE_ROUTES(null)['GET /api/config'], mode: 'mock' } });
+    go('#/playground');
+    const { unmount } = render(<App />);
+    expect(await screen.findByText(/the lab calls the in-lab mock PingOne\./)).toBeInTheDocument();
+    unmount();
+    mockServer({ ...BASE_ROUTES(), 'GET /api/config': { ...BASE_ROUTES()['GET /api/config'], mode: 'live' } });
+    render(<App />);
+    expect(await screen.findByText(/the lab calls your PingOne\./)).toBeInTheDocument();
+  });
+
+  it('the Playground intro stays neutral until the config has loaded, then names the mode', async () => {
+    const { impl } = mockServer({ ...BASE_ROUTES(null), 'GET /api/config': { ...BASE_ROUTES(null)['GET /api/config'], mode: 'mock' } });
+    const real = impl.getMockImplementation();
+    let release;
+    const gate = new Promise((resolve) => { release = resolve; });
+    impl.mockImplementation(async (path, init) => { if (path === '/api/config') await gate; return real(path, init); });
+    go('#/playground');
+    render(<App />);
+    expect(await screen.findByText(/the lab calls PingOne\./)).toBeInTheDocument();
+    expect(screen.queryByText(/the lab calls your PingOne/)).not.toBeInTheDocument();
+    release();
+    expect(await screen.findByText(/the lab calls the in-lab mock PingOne\./)).toBeInTheDocument();
+  });
+});

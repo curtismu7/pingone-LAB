@@ -199,6 +199,16 @@ main { background: var(--bg); color: var(--text-body); border-radius: 8px; paddi
 .pg-step { border-top: 1px dashed var(--border); padding-top: 4px; }
 .pg-user { display: grid; gap: 4px; font-weight: 600; max-width: 360px; margin: 4px 0 0; }
 
+/* Spec note under a flow's title, and the Playground's Run | Tokens tabs. */
+.spec { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 4px; padding: 10px 14px; margin: 8px 0 16px; max-width: 90ch; min-width: 0; }
+.spec__refs { margin: 0 0 6px; display: flex; flex-wrap: wrap; gap: 6px; }
+.spec__badge { display: inline-block; padding: 1px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface-2); color: var(--text); font-family: var(--font-mono); font-size: 0.82em; font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+.spec__badge:hover { text-decoration: underline; }
+.spec__list { margin: 0; display: grid; gap: 6px; }
+.spec__list dt { font-size: 0.78em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.spec__list dd { margin: 0; }
+.pg-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+
 /* pi.flow explainer. */
 .pfg { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px 16px 16px; margin: 16px 0; }
 .pfg h4 { margin: 18px 0 6px; }

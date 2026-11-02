@@ -72,6 +72,13 @@ export function mockSigninRefusalFor(req, env, inContainer = insideContainer) {
   return null;
 }
 
+// Host-run default (index.js, plain `npm start`): a lab on loopback with no PingOne environment configured runs mock,
+// so mock sign-in is on unless the person chose (ALLOW_MOCK_SIGNIN set, even to 0). Anything wider than loopback, or a
+// configured tenant, keeps it off; a proxy is still refused per request by mockSigninRefusalFor.
+export function hostRunMockSignin({ env, bind, tenantConfigured }) {
+  return !env.ALLOW_MOCK_SIGNIN && bind === '127.0.0.1' && !tenantConfigured;
+}
+
 export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sharedFile, now = Date.now, webDist = DEFAULT_WEB_DIST, customerFile, env = process.env } = {}) {
   // customer.config.json (or CUSTOMER_CONFIG): branding and vocabulary, validated once at start.
   const customer = loadCustomerConfig({ file: customerFile, env });
@@ -95,6 +102,7 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
   const app = express();
   // index.js logs these at startup; the Settings page shows them (via /api/config).
   app.locals.customerWarnings = customer.warnings;
+  app.locals.tenantConfigured = Boolean(settings.liveValue('p1', 'environmentId'));
   app.disable('x-powered-by');
   // Everything this request builds for the page (trace steps, token views) knows whether the lab is in mock mode.
   app.use((req, res, next) => traceContext.run({ mock: isMock() }, next));

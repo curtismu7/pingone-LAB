@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import DiagramView from '../DiagramView.jsx';
 import Steps from './Steps.jsx';
 import Credentials from './Credentials.jsx';
-import { TraceList } from '../Proof.jsx';
+import SpecNote from './SpecNote.jsx';
+import { TokenView, TraceList } from '../Proof.jsx';
 import { FLOWS, FLOW_IDS, latestTrace, proofPoints, traceToDiagram } from '../flows.js';
 import { useFlowRun } from '../useFlowRun.js';
 
@@ -17,6 +18,16 @@ function FlowPanel({ flowId, ready, onChanged, signedInAs }) {
   const trace = useMemo(() => latestTrace(settled), [settled]);
   const diagram = useMemo(() => traceToDiagram(trace, `${FLOWS[flowId].title}: calls so far`), [trace, flowId]);
   const points = useMemo(() => proofPoints(flowId, settled), [flowId, settled]);
+  const [tab, setTab] = useState('run');
+  // The token inspector shows the tokens of the latest settled step that returned any (a refused or token-less step keeps the one before it).
+  const tokenStep = useMemo(() => {
+    for (let i = run.results.length - 1; i >= 0; i -= 1) {
+      const r = run.results[i];
+      const d = r && !r.skipped && !r.pending ? r.data : null;
+      if (d && (d.accessToken || d.token || d.idToken)) return { index: i, accessToken: d.accessToken || d.token, idToken: d.idToken };
+    }
+    return null;
+  }, [run.results]);
   const options = { amount: '125', currency: 'USD', loginHint, rarUser: loginHint };
   // CIBA needs someone to ask: the typed user, or else the signed-in user.
   const needsSignIn = flowId === 'ciba' && !signedInAs && !loginHint.trim();
@@ -35,6 +46,23 @@ function FlowPanel({ flowId, ready, onChanged, signedInAs }) {
 
   return (
     <div className="pg-flow">
+      <div className="pg-tabs" role="tablist" aria-label="Playground views">
+        {[['run', 'Run'], ['tokens', 'Tokens']].map(([id, label]) => (
+          <button key={id} type="button" role="tab" id={`pg-${flowId}-tab-${id}`} aria-selected={tab === id} aria-controls={`pg-${flowId}-panel-${id}`} onClick={() => setTab(id)}>{label}</button>
+        ))}
+      </div>
+      <div role="tabpanel" id={`pg-${flowId}-panel-tokens`} aria-labelledby={`pg-${flowId}-tab-tokens`} hidden={tab !== 'tokens'} className="pg-tokens">
+        {tokenStep ? (
+          <>
+            <p className="hint">The access and ID tokens from step {tokenStep.index + 1}: {run.flow.steps[tokenStep.index].label}.</p>
+            <div className="tokens">
+              <TokenView label="Access token" token={tokenStep.accessToken} />
+              <TokenView label="ID token" token={tokenStep.idToken} />
+            </div>
+          </>
+        ) : <p className="hint">No token yet. Run a step that issues one (the last settled step with an access or ID token shows here).</p>}
+      </div>
+      <div role="tabpanel" id={`pg-${flowId}-panel-run`} aria-labelledby={`pg-${flowId}-tab-run`} hidden={tab !== 'run'}>
       {USER_FLOWS.has(flowId) && (
         <label className="pg-user" htmlFor={`pg-${flowId}-user`}>User (login_hint)
           <input id={`pg-${flowId}-user`} type="text" value={loginHint} maxLength={256} onChange={(e) => setLoginHint(e.target.value)}
@@ -59,18 +87,19 @@ function FlowPanel({ flowId, ready, onChanged, signedInAs }) {
           <TraceList trace={perStep[i] || []} />
         </section>
       ) : null))}
+      </div>
     </div>
   );
 }
 
-export default function Playground({ cards, onChanged, signedInAs = null }) {
+export default function Playground({ cards, onChanged, signedInAs = null, mock = null }) {
   const [flowId, setFlowId] = useState(FLOW_IDS[0]);
   const readyOf = (id) => (id === 'discovery' ? cards.find((c) => c.id === 'playground')?.ready : cards.find((c) => c.id === id)?.ready);
   return (
     <section aria-labelledby="pg-title" className="playground">
       <p className="crumbs"><a href="#/">Shelf</a> / Playground</p>
       <h2 id="pg-title">PingOne Protocol Playground</h2>
-      <p className="explain">Every flow, step by step. Execute one step at a time or run them all; each step calls the same lab endpoint as its card, and the lab calls your PingOne.</p>
+      <p className="explain">Every flow, step by step. Execute one step at a time or run them all; each step calls the same lab endpoint as its card, and the lab calls {mock === null ? 'PingOne' : mock ? 'the in-lab mock PingOne' : 'your PingOne'}.</p>
       <div className="pg">
         <nav className="pg-nav" aria-label="Flows">
           {FLOW_IDS.map((id) => (
@@ -81,6 +110,7 @@ export default function Playground({ cards, onChanged, signedInAs = null }) {
         </nav>
         <div className="pg-main">
           <h3>{FLOWS[flowId].title}</h3>
+          <SpecNote flowId={flowId} />
           <FlowPanel key={flowId} flowId={flowId} ready={Boolean(readyOf(flowId))} onChanged={onChanged} signedInAs={signedInAs} />
         </div>
       </div>
