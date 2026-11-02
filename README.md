@@ -198,12 +198,10 @@ shows "Not advertised" and its routes answer `409 not_advertised` before any oth
 | Token exchange (RFC 8693) | the token-exchange grant |
 | Flows API: open and read a pi.flow | `pi.flow` |
 
-Not here, because PingOne does not advertise them: DPoP, rich authorization requests (RAR), dynamic client
-registration, ID-JAG, the `claims` parameter, `request_uri` outside PAR. The discovery check in Settings lists them
-as "not advertised".
-
-**Intentionally not in this lab (owner decision):** DPoP, RAR, ID-JAG, SPIFFE, Transaction Tokens and Resource
-Metadata. DPoP and ID-JAG are PingFederate-only; see pingfederate-LAB and id-jag-standalone-LAB.
+Not here, by owner decision: DPoP, rich authorization requests (RAR), ID-JAG, SPIFFE, Transaction Tokens and
+Resource Metadata. DPoP and ID-JAG are PingFederate-only; see pingfederate-LAB and id-jag-standalone-LAB. PingOne also
+does not advertise dynamic client registration, the `claims` parameter or `request_uri` outside PAR. The discovery
+check in Settings lists what PingOne does not advertise as "not advertised".
 
 ## How the PingOne flows run
 

@@ -534,4 +534,18 @@ describe('spec notes, token tab and mock wording', () => {
     render(<App />);
     expect(await screen.findByText(/the lab calls your PingOne\./)).toBeInTheDocument();
   });
+
+  it('the Playground intro stays neutral until the config has loaded, then names the mode', async () => {
+    const { impl } = mockServer({ ...BASE_ROUTES(null), 'GET /api/config': { ...BASE_ROUTES(null)['GET /api/config'], mode: 'mock' } });
+    const real = impl.getMockImplementation();
+    let release;
+    const gate = new Promise((resolve) => { release = resolve; });
+    impl.mockImplementation(async (path, init) => { if (path === '/api/config') await gate; return real(path, init); });
+    go('#/playground');
+    render(<App />);
+    expect(await screen.findByText(/the lab calls PingOne\./)).toBeInTheDocument();
+    expect(screen.queryByText(/the lab calls your PingOne/)).not.toBeInTheDocument();
+    release();
+    expect(await screen.findByText(/the lab calls the in-lab mock PingOne\./)).toBeInTheDocument();
+  });
 });
