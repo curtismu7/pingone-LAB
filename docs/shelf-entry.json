@@ -2,7 +2,7 @@
   "id": "pingone-lab",
   "name": "PingOne LAB",
   "kind": "Demo",
-  "description": "One shelf with a card for each thing PingOne can do for apps and AI agents (only what its discovery document advertises): pi.flow sign-in, PKCE, PAR, JAR, client credentials, token lifecycle, Userinfo, device authorization, CIBA, token exchange and a protocol playground. Runs on a built-in mock PingOne (offline) or your own PingOne environment (live).",
+  "description": "A card for each thing PingOne can do for apps and AI agents that its discovery document advertises: pi.flow sign-in, PKCE, PAR, JAR, client credentials, token lifecycle, Userinfo, device authorization, CIBA, token exchange and a playground. Runs on a mock PingOne or your own environment.",
   "url": "http://127.0.0.1:5500",
   "healthPath": "/api/health",
   "composeFile": "docker-compose.yml",
