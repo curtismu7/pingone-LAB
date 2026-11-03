@@ -99,8 +99,13 @@ export default function App() {
     window.location.reload();
   };
   const [modeBusy, setModeBusy] = useState(false);
+  // Rule 19: Real is disabled with the server's reason while the live settings are incomplete. The fields ride
+  // /api/config (refetched by refresh()), so the toggle is always in sync with the server's answer.
+  const realAvailable = config ? config.realAvailable !== false : null; // null = not loaded yet
+  const realReason = config?.realReason || null;
   const switchMode = async (next) => {
     if (next === config?.mode || modeBusy) return;
+    if (next === 'live' && realAvailable === false) return; // Real is disabled with the reason; the button is too
     setModeBusy(true);
     await api.setMode(next);
     setModeBusy(false);
@@ -147,12 +152,19 @@ export default function App() {
             : <button type="button" className="primary" onClick={signIn}>Sign in</button>}
         </div>
         <div className="prefs">
-          <div className="mode-toggle" role="group" aria-label="Mode">
-            {['mock', 'live'].map((m) => (
-              <button key={m} type="button" className="mode-toggle__button" aria-pressed={(config?.mode || 'live') === m} disabled={modeBusy} onClick={() => switchMode(m)}>
-                {m === 'mock' ? 'Mock' : 'Live'}
-              </button>
-            ))}
+          <div className="mode-toggle" role="group" aria-label="Mode" data-testid="mode">
+            {[
+              ['mock', 'Mock', false],
+              ['live', 'Real', true],
+            ].map(([m, label, isReal]) => {
+              const off = modeBusy || (isReal && realAvailable === false);
+              const why = isReal && realAvailable === false && realReason ? realReason : undefined;
+              return (
+                <button key={m} type="button" className="mode-toggle__button" aria-pressed={(config?.mode || 'mock') === m} disabled={off} title={why} onClick={() => switchMode(m === 'live' ? 'live' : 'mock')} data-testid={`mode-${m === 'live' ? 'real' : 'mock'}`}>
+                  {label}
+                </button>
+              );
+            })}
           </div>
           <form className="workspace" onSubmit={switchWorkspace} aria-label="Workspace">
             <label className="inline">Workspace

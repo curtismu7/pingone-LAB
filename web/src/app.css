@@ -266,3 +266,5 @@ main { background: var(--bg); color: var(--text-body); border-radius: 8px; paddi
   h2 { font-size: 1.6em; }
   main { padding: 8px 12px 32px; }
 }
+.mode-toggle button:disabled { opacity: 0.6; }
+.mode-toggle button:disabled { opacity: 0.6; }

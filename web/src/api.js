@@ -29,7 +29,8 @@ export async function call(method, path, body) {
 
 export const api = {
   config: () => call('GET', '/api/config'),
-  setMode: (mode) => call('PUT', '/api/mode', { mode }),
+  setMode: (mode) => call('PUT', '/api/mode', { mode: mode === 'live' ? 'real' : mode }),
+  info: () => call('GET', '/api/info'),
   cards: () => call('GET', '/api/cards'),
   me: () => call('GET', '/api/me'),
   signOut: () => call('POST', '/api/signout'),
