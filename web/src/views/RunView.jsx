@@ -4,7 +4,6 @@ import Proof from '../Proof.jsx';
 import Steps from './Steps.jsx';
 import Credentials from './Credentials.jsx';
 import Readiness from './Readiness.jsx';
-import PiFlowGuide from './PiFlowGuide.jsx';
 import SpecNote from './SpecNote.jsx';
 import { useFlowRun } from '../useFlowRun.js';
 import { CARD_DIAGRAM } from '../diagrams/index.js';
@@ -104,7 +103,6 @@ export default function RunView({ card, story, onChanged, autoStart = false, onA
       )}
 
       <Proof flowId={card.id} results={run.results} />
-      {card.id === 'piflow' && <PiFlowGuide results={run.results} />}
 
       {CARD_DIAGRAM[card.id] && (
         <details className="how" open>

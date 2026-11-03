@@ -1,132 +1,132 @@
 {
-  "schema": "diagram-studio/1",
-  "id": "p1l-signin",
-  "title": "Sign in (pi.flow)",
-  "lede": "The app drives PingOne's sign-in as JSON; the code comes back from resume, never through the browser.",
-  "groups": {
-    "lab": {
-      "label": "This lab",
-      "color": "dark"
-    },
-    "p1": {
-      "label": "Your PingOne",
-      "color": "blue"
-    }
+ "schema": "diagram-studio/1",
+ "id": "p1l-signin",
+ "title": "Sign in (pi.flow)",
+ "lede": "Open a flow and read it back with no credential; then post the username and password, resume, and redeem the code - the full pi.flow, one diagram.",
+ "groups": {
+  "lab": {
+   "label": "This lab",
+   "color": "dark"
   },
-  "nodes": [
-    {
-      "id": "lab",
-      "group": "lab",
-      "label": "This lab (server)",
-      "sub": [
-        "Holds verifiers, cookies, tokens"
-      ],
-      "x": 0,
-      "y": 160
-    },
-    {
-      "id": "authz",
-      "group": "p1",
-      "label": "Authorization endpoint",
-      "sub": [
-        "response_mode=pi.flow"
-      ],
-      "x": 360,
-      "y": 0
-    },
-    {
-      "id": "flows",
-      "group": "p1",
-      "label": "Flows API",
-      "sub": [
-        "<env>/flows/{id}"
-      ],
-      "x": 360,
-      "y": 140
-    },
-    {
-      "id": "resume",
-      "group": "p1",
-      "label": "Resume",
-      "sub": [
-        "<env>/as/resume?flowId="
-      ],
-      "x": 360,
-      "y": 280
-    },
-    {
-      "id": "token",
-      "group": "p1",
-      "label": "Token endpoint",
-      "sub": [
-        "Redeems the code with PKCE"
-      ],
-      "x": 360,
-      "y": 420
-    }
-  ],
-  "edges": [
-    {
-      "source": "lab",
-      "target": "authz",
-      "label": "GET authorize (pi.flow)"
-    },
-    {
-      "source": "authz",
-      "target": "lab",
-      "label": "flow JSON: id, status"
-    },
-    {
-      "source": "lab",
-      "target": "flows",
-      "label": "POST usernamePassword.check"
-    },
-    {
-      "source": "lab",
-      "target": "resume",
-      "label": "GET resume"
-    },
-    {
-      "source": "resume",
-      "target": "lab",
-      "label": "code"
-    },
-    {
-      "source": "lab",
-      "target": "token",
-      "label": "code + code_verifier"
-    }
-  ],
-  "steps": [
-    {
-      "title": "Open",
-      "what": "PingOne answers the authorization request with a JSON flow instead of a login page.",
-      "edges": [
-        0,
-        1
-      ]
-    },
-    {
-      "title": "Password",
-      "what": "The lab's own form posts the username and password to the flow.",
-      "edges": [
-        2
-      ]
-    },
-    {
-      "title": "Code",
-      "what": "Once the flow is complete, resume hands back the authorization code.",
-      "edges": [
-        3,
-        4
-      ]
-    },
-    {
-      "title": "Tokens",
-      "what": "The code and the PKCE verifier buy the tokens; the ID token is verified.",
-      "edges": [
-        5
-      ]
-    }
-  ]
+  "p1": {
+   "label": "Your PingOne",
+   "color": "blue"
+  }
+ },
+ "nodes": [
+  {
+   "id": "lab",
+   "group": "lab",
+   "label": "This lab (server)",
+   "sub": [
+    "Holds verifiers, cookies, tokens"
+   ],
+   "x": 0,
+   "y": 160
+  },
+  {
+   "id": "authz",
+   "group": "p1",
+   "label": "Authorization endpoint",
+   "sub": [
+    "response_mode=pi.flow"
+   ],
+   "x": 360,
+   "y": 0
+  },
+  {
+   "id": "flows",
+   "group": "p1",
+   "label": "Flows API",
+   "sub": [
+    "<env>/flows/{id}"
+   ],
+   "x": 360,
+   "y": 140
+  },
+  {
+   "id": "resume",
+   "group": "p1",
+   "label": "Resume",
+   "sub": [
+    "<env>/as/resume?flowId="
+   ],
+   "x": 360,
+   "y": 280
+  },
+  {
+   "id": "token",
+   "group": "p1",
+   "label": "Token endpoint",
+   "sub": [
+    "Redeems the code with PKCE"
+   ],
+   "x": 360,
+   "y": 420
+  }
+ ],
+ "edges": [
+  {
+   "source": "lab",
+   "target": "authz",
+   "label": "GET authorize (pi.flow)"
+  },
+  {
+   "source": "authz",
+   "target": "lab",
+   "label": "flow JSON: id, status"
+  },
+  {
+   "source": "lab",
+   "target": "flows",
+   "label": "POST usernamePassword.check"
+  },
+  {
+   "source": "lab",
+   "target": "resume",
+   "label": "GET resume"
+  },
+  {
+   "source": "resume",
+   "target": "lab",
+   "label": "code"
+  },
+  {
+   "source": "lab",
+   "target": "token",
+   "label": "code + code_verifier"
+  }
+ ],
+ "steps": [
+  {
+   "title": "Open",
+   "what": "PingOne answers the authorization request with a JSON flow instead of a login page.",
+   "edges": [
+    0,
+    1
+   ]
+  },
+  {
+   "title": "Password",
+   "what": "The lab's own form posts the username and password to the flow.",
+   "edges": [
+    2
+   ]
+  },
+  {
+   "title": "Code",
+   "what": "Once the flow is complete, resume hands back the authorization code.",
+   "edges": [
+    3,
+    4
+   ]
+  },
+  {
+   "title": "Tokens",
+   "what": "The code and the PKCE verifier buy the tokens; the ID token is verified.",
+   "edges": [
+    5
+   ]
+  }
+ ]
 }

@@ -230,7 +230,6 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
       : { signedIn: false };
   }));
 
-  app.post('/api/cards/piflow/open', wrap(() => piflow.openAndRead()));
 
   app.post('/api/cards/client-credentials/token', wrap((req) => grants.clientCredentials(req.session)));
   app.post('/api/cards/lifecycle/refresh', wrap((req) => grants.refresh(req.session)));

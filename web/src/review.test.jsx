@@ -9,7 +9,7 @@ import App, { viewTitle } from './App.jsx';
 import DiagramView, { usePositions, resetDiagram } from './DiagramView.jsx';
 import { reduce, initial, useStepper, speedMs } from './stepper.js';
 import { loadDiagram } from './diagrams/index.js';
-import { mockServer, BASE_ROUTES, CARDS } from './testApi.js';
+import { mockServer, BASE_ROUTES, CARDS, hop } from './testApi.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const go = (hash) => { window.location.hash = hash; };
@@ -109,11 +109,11 @@ describe('3. customer.config warnings', () => {
 
 describe('7. results are announced', () => {
   it('step states and proof points sit in polite live regions', async () => {
-    mockServer({ ...BASE_ROUTES(), 'POST /api/cards/piflow/open': { status: 'USERNAME_PASSWORD_REQUIRED', actions: [], trace: [] } });
-    go('#/run/piflow');
+    mockServer({ ...BASE_ROUTES(), 'POST /api/cards/lifecycle/refresh': { outcome: 'accepted', trace: [hop('refresh', 'Refresh', 'POST', 'https://auth.example/as/token', 200, {})] } });
+    go('#/run/lifecycle');
     const { container } = render(<App />);
     await userEvent.click(await screen.findByRole('button', { name: 'Run' }));
-    await screen.findByText(/No credential was sent/);
+    await screen.findAllByText(/Refresh/);
     expect(container.querySelector('ol.steps')).toHaveAttribute('aria-live', 'polite');
     expect(container.querySelector('.proof ul.points')).toHaveAttribute('aria-live', 'polite');
   });

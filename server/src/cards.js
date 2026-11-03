@@ -15,7 +15,6 @@ export const CARDS = [
   { id: 'device', title: 'Device authorization (RFC 8628)', kind: 'flow' },
   { id: 'ciba', title: 'CIBA (start and poll)', kind: 'flow' },
   { id: 'tokenExchange', title: 'Token exchange (RFC 8693)', kind: 'flow' },
-  { id: 'piflow', title: 'Flows API: open and read a pi.flow', kind: 'flow' },
   { id: 'playground', title: 'PingOne Protocol Playground', kind: 'playground' },
   { id: 'discovery', title: 'PingOne discovery check', kind: 'check' },
 ];
