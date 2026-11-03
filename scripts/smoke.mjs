@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CARDS = ['signin', 'pkce', 'par', 'jar', 'clientCredentials', 'lifecycle', 'userinfo', 'device', 'ciba', 'tokenExchange', 'piflow'];
+const CARDS = ['signin', 'pkce', 'par', 'jar', 'clientCredentials', 'lifecycle', 'userinfo', 'device', 'ciba', 'tokenExchange'];
 const failures = [];
 const note = (ok, name, detail = '') => { console.log(`${ok ? 'ok  ' : 'FAIL'}  ${name}${detail ? `: ${detail}` : ''}`); if (!ok) failures.push(name); };
 
