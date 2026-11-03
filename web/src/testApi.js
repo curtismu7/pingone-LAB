@@ -39,9 +39,10 @@ export const CARDS = [
 ];
 
 export const BASE_ROUTES = (issuer = ISSUER) => ({
-  'GET /api/config': { customer: { name: 'PingOne Lab', tagline: 'Live', accent: '#b3122d', accentDark: '#ff6b7f', vocabulary: {}, warnings: [] }, issuer },
+  'GET /api/config': { customer: { name: 'PingOne Lab', tagline: 'Live', accent: '#b3122d', accentDark: '#ff6b7f', vocabulary: {}, warnings: [] }, issuer, mode: 'live', source: 'real', realAvailable: true, realReason: null },
   'GET /api/cards': { cards: CARDS },
   'GET /api/me': { signedIn: false },
+  'GET /api/info': { source: 'real', realAvailable: true, realReason: null, mode: 'live', issuer },
   'GET /api/stories': { verticals: [{ id: 'banking', label: 'Banking' }, { id: 'retail', label: 'Retail' }], default: 'banking' },
   'GET /api/stories/banking': { vertical: 'banking', intro: ['Harbor Mutual intro.'], cards: { device: 'Dana links the TV app.' } },
   'GET /api/stories/retail': { vertical: 'retail', intro: ['Copperline intro.'], cards: { device: 'Alex signs in at the screen.' } },

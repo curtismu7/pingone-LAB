@@ -117,13 +117,20 @@ test('mode switch: PUT /api/mode moves the whole lab between the mock and the co
     assert.equal((await lab.call('GET', '/api/config')).data.mode, 'live', 'an environment is configured: live by default');
     const toMock = await lab.call('PUT', '/api/mode', { mode: 'mock' });
     assert.equal(toMock.data.mode, 'mock');
+    assert.equal(toMock.data.source, 'mock');
+    const info = (await lab.call('GET', '/api/info')).data;
+    assert.equal(info.source, 'mock');
+    assert.equal(info.realAvailable, true, 'FULL_SETTINGS configures every required live value');
     await lab.call('POST', '/api/p1/discovery');
     assert.equal(lab.fake.calls.length, 0, 'mock mode never calls the configured PingOne');
     assert.equal((await lab.call('GET', '/api/settings')).data.settings.signin.clientId, FULL_SETTINGS.signin.clientId, 'live settings are untouched');
     assert.equal((await lab.call('PUT', '/api/mode', { mode: 'demo' })).status, 400);
-    const cross = await lab.call('PUT', '/api/mode', { mode: 'live' }, { Origin: 'https://evil.example' });
+    const cross = await lab.call('PUT', '/api/mode', { mode: 'real' }, { Origin: 'https://evil.example' });
     assert.equal(cross.status, 403);
-    assert.equal((await lab.call('PUT', '/api/mode', { mode: 'live' })).data.mode, 'live');
+    const back = await lab.call('PUT', '/api/mode', { mode: 'real' });
+    assert.equal(back.data.mode, 'live');
+    assert.equal(back.data.source, 'real');
+    assert.equal((await lab.call('GET', '/api/info')).data.source, 'real');
     await lab.call('POST', '/api/p1/discovery');
     assert.ok(lab.fake.calls.length > 0, 'live mode calls the configured PingOne again');
     assert.equal((await lab.call('GET', '/api/health')).data.runtime, 'live');
@@ -225,7 +232,7 @@ test('the default tagline says what mode the lab is in; a tagline the customer w
   try {
     const mock = (await lab.call('GET', '/api/config')).data.customer.tagline;
     assert.match(mock, /simulated PingOne/);
-    await lab.call('PUT', '/api/mode', { mode: 'live' });
+    await lab.call('PUT', '/api/mode', { mode: 'real' });
     const live = (await lab.call('GET', '/api/config')).data.customer.tagline;
     assert.match(live, /run live against your PingOne/);
   } finally { await lab.close(); }

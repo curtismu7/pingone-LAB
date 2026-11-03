@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { loadCustomerConfig, publicConfig } from './customer.js';
 import { renderStory, verticalList, StoryError } from './stories.js';
-import { createSettings, SettingsError } from './settings.js';
+import { createSettings, REQUIRED, SettingsError } from './settings.js';
 import { createOutbound } from './outbound.js';
 import { createNetguard } from './netguard.js';
 import { createMockP1, mockClientTable, USER as MOCK_USER } from './mockp1.js';
@@ -84,6 +84,8 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
   const customer = loadCustomerConfig({ file: customerFile, env });
   const settings = createSettings({ file: settingsFile, ...(sharedFile !== undefined ? { sharedFile } : {}), port });
   const isMock = () => settings.mode() === 'mock';
+  // Rule 19: Real is available only when the live configuration is complete (every required setting for every card).
+  const liveConfigured = () => Object.keys(REQUIRED).every((card) => (REQUIRED[card] || []).every(([s, f]) => Boolean(settings.liveValue(s, f))));
   const mockSigninRefusal = (req) => mockSigninRefusalFor(req, env);
   // Mock mode: the in-process mock PingOne answers every call (no call log, bounded state); the real fetch sits
   // behind the netguard, which refuses anything while the lab is in mock mode.
@@ -158,15 +160,35 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
     customer: publicConfig(customer, settings.mode()),
     issuer: settings.issuer() || null,
     mode: settings.mode(),
+    source: settings.mode() === 'mock' ? 'mock' : 'real',
+    realAvailable: liveConfigured(),
+    realReason: liveConfigured() ? null : 'Real (live) is not available: the live settings are incomplete. Set the PingOne environment id and every client id and secret on the Settings page.',
     workspace: req.session.workspace,
     // In mock mode the sign-in dialog shows the mock's demo user (it exists nowhere else) when mock sign-in is allowed.
     mockSignin: isMock() ? (mockSigninRefusal(req) ? { allowed: false } : { allowed: true, username: MOCK_USER.username, password: MOCK_USER.password }) : null,
   })));
+  // Rule 19: what the Mock/Real toggle needs. Real (live) is available only when the live configuration is
+  // complete (environment id and every required client setting); otherwise the toggle disables Real with what is missing.
+  app.get('/api/info', wrap(() => {
+    const liveReady = liveConfigured();
+    return {
+      source: settings.mode() === 'mock' ? 'mock' : 'real',
+      realAvailable: liveReady,
+      realReason: liveReady ? null : 'Real (live) needs the live settings to be complete: set the PingOne environment id and every client id and secret on the Settings page.',
+      mode: settings.mode(),
+      issuer: settings.issuer() || null,
+    };
+  }));
   // Mock or live, for the whole lab. A same-origin JSON write like every other.
   app.put('/api/mode', wrap((req) => {
-    const mode = settings.setMode(req.body?.mode);
+    const requested = req.body?.mode;
+    if (requested !== 'mock' && requested !== 'real') throw new LabError('bad_mode', 'mode must be exactly "mock" or "real"', 400);
+    if (requested === 'real' && !liveConfigured()) {
+      throw new LabError('real_not_available', 'Real (live) is not available: the live settings are incomplete. Set the PingOne environment id and every client id and secret on the Settings page.', 409);
+    }
+    const mode = settings.setMode(requested === 'real' ? 'live' : 'mock');
     p1.clearCache();
-    return { mode, issuer: settings.issuer() || null };
+    return { mode, source: requested, issuer: settings.issuer() || null };
   }));
   app.get('/api/stories', wrap(() => ({ verticals: verticalList(), default: customer.config.vertical })));
   app.get('/api/stories/:vertical', wrap((req) => {
