@@ -46,7 +46,7 @@ describe('shelf', () => {
     await screen.findByText('Dana links the TV app.');
     const titles = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
     expect(titles).toEqual(['Sign in (pi.flow)', 'PKCE', 'PAR', 'Signed request object (JAR)', 'Client credentials', 'Token lifecycle: refresh, introspect, revoke',
-      'Userinfo', 'Device authorization (RFC 8628)', 'CIBA (start and poll)', 'Token exchange (RFC 8693)', 'Flows API: open and read a pi.flow', 'PingOne Protocol Playground']);
+      'Userinfo', 'Device authorization (RFC 8628)', 'CIBA (start and poll)', 'Token exchange (RFC 8693)', 'PingOne Protocol Playground']);
     expect(screen.queryByText(/DPoP|Dynamic client registration|RAR/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'ciba.clientSecret' })).toHaveAttribute('href', '#/settings/ciba.clientSecret');
     expect(screen.getByText('Not advertised')).toBeInTheDocument();
@@ -399,7 +399,7 @@ describe('playground', () => {
     go('#/playground');
     render(<App />);
     const nav = await screen.findByRole('navigation', { name: 'Flows' });
-    expect(within(nav).getAllByRole('button')).toHaveLength(12);
+    expect(within(nav).getAllByRole('button')).toHaveLength(11);
     await userEvent.click(within(nav).getByRole('button', { name: /Token lifecycle/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Execute step 1: Refresh: trade the refresh token for new tokens' }));
     expect(await screen.findByText('PingOne accepted the refresh: 200')).toBeInTheDocument();
@@ -418,25 +418,6 @@ describe('no redirect, no other host', () => {
       expect([f, /location\.(href|assign|replace)\s*[=(]|window\.open\(|location\s*=/.test(text)]).toEqual([f, false]);
       expect([f, /fetch\(\s*['"`]https?:/.test(text)]).toEqual([f, false]);
     }
-  });
-});
-
-describe('pi.flow guide', () => {
-  it('explains the idea, steps, statuses and when to use it, then the fields of the answer the run got back', async () => {
-    const answer = { id: '<flow id>', status: 'USERNAME_PASSWORD_REQUIRED', _links: { 'usernamePassword.check': { href: 'x' }, self: { href: 'x' } }, resumeUrl: 'https://auth.example/env/as/resume?flowId=<flow id>', expiresAt: '2026-10-30T19:02:38.378Z', extra: 1 };
-    mockServer({ ...BASE_ROUTES(), 'POST /api/cards/piflow/open': { status: answer.status, actions: ['usernamePassword.check'], trace: [hop('authorize', 'Open', 'GET', 'https://auth.example/as/authorize', 200, answer)] } });
-    go('#/run/piflow');
-    render(<App />);
-    const guide = await screen.findByRole('region', { name: 'How pi.flow works' });
-    for (const h of ['1. The idea', '2. The steps', '3. The answer you just got', '4. Statuses', '5. When to use it']) expect(within(guide).getByRole('heading', { name: h })).toBeInTheDocument();
-    expect(within(guide).getByText(/Press Run/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Run' }));
-    await waitFor(() => expect(within(guide).queryByText(/Press Run/)).toBeNull());
-    const statusRow = within(guide).getByRole('row', { name: /USERNAME_PASSWORD_REQUIRED/ });
-    expect(within(statusRow).getByText('your answer')).toBeInTheDocument();
-    expect(within(guide).getByText('2026-10-30T19:02:38.378Z')).toBeInTheDocument();
-    expect(within(guide).getAllByText('not in this answer').length).toBeGreaterThan(0);
-    expect(within(guide).getByText(/Also in this answer: extra/)).toBeInTheDocument();
   });
 });
 

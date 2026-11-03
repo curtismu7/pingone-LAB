@@ -10,7 +10,7 @@ const P1 = 'https://auth.pingone.example/env-1';
 
 describe('flows', () => {
   it('covers every runnable card plus discovery, only what PingOne advertises, and only calls the lab\'s own /api', () => {
-    expect(FLOW_IDS).toEqual(['signin', 'pkce', 'par', 'jar', 'clientCredentials', 'lifecycle', 'userinfo', 'device', 'ciba', 'tokenExchange', 'piflow', 'discovery']);
+    expect(FLOW_IDS).toEqual(['signin', 'pkce', 'par', 'jar', 'clientCredentials', 'lifecycle', 'userinfo', 'device', 'ciba', 'tokenExchange', 'discovery']);
     for (const absent of ['dcr', 'rar', 'dpop']) expect(FLOW_IDS).not.toContain(absent);
     for (const id of FLOW_IDS) for (const s of FLOWS[id].steps) expect(s.path).toMatch(/^\/api\//);
   });

@@ -163,22 +163,6 @@ test('the session cookie is HttpOnly and SameSite=Strict; sessions do not mix', 
   } finally { await a.close(); }
 });
 
-test('pi.flow open-and-read: shows status, sends no credential and no session cookie, never shows the flow id', async () => {
-  const lab = await startLab();
-  try {
-    await lab.signIn();
-    const before = lab.fake.calls.length;
-    const res = await lab.call('POST', '/api/cards/piflow/open');
-    assert.equal(res.status, 200);
-    assert.equal(res.data.status, 'USERNAME_PASSWORD_REQUIRED');
-    const calls = lab.fake.calls.slice(before);
-    assert.deepEqual(calls.map((c) => c.method), ['GET', 'GET']);
-    assert.ok(!/(^|; )ST=/.test(calls[0].headers.cookie || ''), 'fresh flow: the sign-in session cookie is not sent');
-    assert.ok(res.data.trace.every((s) => !JSON.stringify(s).match(/flows\/[A-Za-z0-9_-]{6,}/)), 'flow id never shown');
-    assert.deepEqual(lab.leaks(), []);
-  } finally { await lab.close(); }
-});
-
 test('a refused authorization request is shown as a refusal with PingOne\'s error', async () => {
   const lab = await startLab();
   try {

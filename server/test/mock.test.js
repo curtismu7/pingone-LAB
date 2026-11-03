@@ -68,9 +68,6 @@ test('mock mode with no settings file at all: every card runs end to end and the
     assert.equal(discovery.status, 200);
     assert.equal(discovery.data.trace[0].mock, true, 'a mock hop is labelled');
 
-    const piflow = await lab.call('POST', '/api/cards/piflow/open');
-    assert.equal(piflow.status, 200);
-
     // Sign-in through pi.flow with the mock's demo user; a wrong password is refused like PingOne refuses it.
     assert.equal((await lab.call('POST', '/api/signin/start')).data.state, 'credentials_required');
     const wrong = await lab.call('POST', '/api/signin/credentials', { username: 'alice', password: 'nope-nope-nope' });
