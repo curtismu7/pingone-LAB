@@ -78,9 +78,9 @@ describe('shelf', () => {
 
   it('the Mock/Live toggle shows the mode and switches it through PUT /api/mode', async () => {
     let mode = 'live';
-    const server = mockServer({ ...BASE_ROUTES(), 'GET /api/config': () => ({ body: { customer: { name: 'PingOne Lab' }, issuer: mode === 'mock' ? 'https://auth.pingone-mock.invalid/e/as' : ISSUER, mode } }), 'PUT /api/mode': (body) => { mode = body.mode; return { body: { mode } }; } });
+    const server = mockServer({ ...BASE_ROUTES(), 'GET /api/config': () => ({ body: { customer: { name: 'PingOne Lab' }, issuer: mode === 'mock' ? 'https://auth.pingone-mock.invalid/e/as' : ISSUER, mode } }), 'GET /api/info': () => ({ body: { source: mode === 'mock' ? 'mock' : 'real', realAvailable: true, realReason: null, mode } }), 'PUT /api/mode': (body) => { mode = body.mode === 'real' ? 'live' : 'mock'; return { body: { mode, source: body.mode } }; } });
     render(<App />);
-    const live = await screen.findByRole('button', { name: 'Live' });
+    const live = await screen.findByRole('button', { name: 'Real' });
     await waitFor(() => expect(live).toHaveAttribute('aria-pressed', 'true'));
     await userEvent.click(screen.getByRole('button', { name: 'Mock' }));
     await waitFor(() => expect(screen.getByTestId('banner')).toHaveTextContent('Mock: a simulated PingOne inside this lab.'));
