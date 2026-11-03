@@ -33,7 +33,6 @@ export const CARDS = [
   { id: 'device', title: 'Device authorization (RFC 8628)', kind: 'flow', ready: true, missing: [], advertised: false },
   { id: 'ciba', title: 'CIBA (start and poll)', kind: 'flow', ready: false, missing: ['ciba.clientId', 'ciba.clientSecret'], advertised: true },
   { id: 'tokenExchange', title: 'Token exchange (RFC 8693)', kind: 'flow', ready: true, missing: [], advertised: true },
-  { id: 'piflow', title: 'Flows API: open and read a pi.flow', kind: 'flow', ready: true, missing: [], advertised: true },
   { id: 'playground', title: 'PingOne Protocol Playground', kind: 'playground', ready: true, missing: [] },
   { id: 'discovery', title: 'PingOne discovery check', kind: 'check', ready: true, missing: [] },
 ];

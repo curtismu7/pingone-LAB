@@ -43,7 +43,6 @@ export const FLOWS = {
     ],
   },
   tokenExchange: { title: 'Token exchange', steps: [{ id: 'run', label: 'Exchange the user\'s token (with the actor\'s, when set)', path: '/api/cards/token-exchange/run' }] },
-  piflow: { title: 'Flows API (pi.flow open)', steps: [{ id: 'open', label: 'Open a flow and read it back (no credential sent)', path: '/api/cards/piflow/open' }] },
   discovery: { title: 'Discovery check', steps: [{ id: 'check', label: 'Read PingOne discovery', path: '/api/p1/discovery' }] },
 };
 export const FLOW_IDS = Object.keys(FLOWS);
@@ -172,7 +171,6 @@ export function proofPoints(flowId, results) {
     for (const c of d.checks) points.push(yesNo(c.ok, `Check passed: ${c.name}.`, `Check FAILED: ${c.name}.`));
     if (d.actChain?.length) points.push({ tone: 'info', text: `act chain, outermost first: ${d.actChain.join(' -> ')}` });
   }
-  if (flowId === 'piflow' && d.status) points.push({ tone: 'accepted', text: `PingOne opened a flow at ${d.status}. No credential was sent.` });
   if (flowId === 'discovery' && Array.isArray(d.features)) {
     for (const f of d.features) points.push({ tone: f.supported ? 'accepted' : 'info', text: `${f.label}: ${f.supported ? 'advertised' : 'not advertised'}` });
   }

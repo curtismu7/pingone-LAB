@@ -26,7 +26,7 @@ test('cards say which settings are missing, in shelf order', async () => {
   const lab = await startLab({ settings: { p1: { environmentId: ENV_ID } } });
   try {
     const { data } = await lab.call('GET', '/api/cards');
-    assert.deepEqual(data.cards.map((c) => c.id), ['signin', 'pkce', 'par', 'jar', 'clientCredentials', 'lifecycle', 'userinfo', 'device', 'ciba', 'tokenExchange', 'piflow', 'playground', 'discovery']);
+    assert.deepEqual(data.cards.map((c) => c.id), ['signin', 'pkce', 'par', 'jar', 'clientCredentials', 'lifecycle', 'userinfo', 'device', 'ciba', 'tokenExchange', 'playground', 'discovery']);
     assert.deepEqual(data.cards.find((c) => c.id === 'ciba').missing, ['ciba.clientId', 'ciba.clientSecret']);
     assert.deepEqual(data.cards.find((c) => c.id === 'jar').missing, ['jar.clientId', 'jar.clientSecret']);
     assert.deepEqual(data.cards.find((c) => c.id === 'tokenExchange').missing, ['tokenExchange.exchangeClientId', 'tokenExchange.exchangeClientSecret']);

@@ -10,7 +10,6 @@ export const EXPLAIN = {
   device: 'Device authorization (RFC 8628): PingOne gives the app a short user code and an address; the person signs in there on a phone or laptop while the app polls. This is the one card where the sign-in happens on PingOne\'s own pages, on another device. For agents and devices without a keyboard it is the honest way to get a person\'s consent.',
   ciba: 'Client-initiated backchannel authentication: the app names a user, PingOne asks that user to approve through its own authenticator (the CIBA flow set on the application, such as PingOne MFA), and the app polls until they approve, deny, or the request expires. The lab has no approve button: the person approves wherever PingOne sends the request. For agents this is human-in-the-loop done properly.',
   tokenExchange: 'RFC 8693 token exchange: the signed-in user\'s access token is exchanged for a new token; when an actor application is set, its own token goes in as actor_token and the new token\'s act claim should name it. PingOne builds the claims from the exchange application\'s attribute mappings, so each check is shown pass or fail. For agents this is delegation you can audit.',
-  piflow: 'PingOne\'s flows API: an authorization request with response_mode=pi.flow returns the sign-in as a JSON flow (id and status) instead of an HTML page. This card opens a flow and reads it back, and sends no credential. For agents and native apps it is what makes a redirect-free sign-in possible.',
   playground: 'Every flow on one page, step by step: execute one step at a time or run them all, and see each request and PingOne\'s answer next to the sequence of calls. It runs the same server steps as the cards.',
 };
 
@@ -79,12 +78,6 @@ export const SPEC = {
     solves: 'Trades one token for another with a different audience, scope or identity, and can record who is acting on whose behalf (the act claim).',
     example: 'A gateway swaps the user\'s token for one that is valid only at the orders service.',
     agents: 'Delegation you can audit: the new token can name the agent that is working for the user.',
-  },
-  piflow: {
-    refs: [],
-    solves: 'PingOne\'s own flows API: ask for a sign-in flow, read its status, and post the next action, instead of redirecting to a login page. It is a PingOne feature, not an IETF or OpenID standard.',
-    example: 'An embedded kiosk app that must stay on its own screens opens a flow and reads which form PingOne needs next.',
-    agents: 'Lets a program drive sign-in where redirects do not exist. The app sees the password, so use it for first-party apps only.',
   },
   discovery: {
     refs: [RFC(8414), { label: 'OpenID Connect Discovery 1.0', url: 'https://openid.net/specs/openid-connect-discovery-1_0.html' }],
