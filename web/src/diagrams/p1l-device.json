@@ -73,27 +73,32 @@
     {
       "source": "lab",
       "target": "dev",
-      "label": "client_id + scope"
+      "label": "client_id + scope",
+      "color": "blue"
     },
     {
       "source": "dev",
       "target": "lab",
-      "label": "user_code, device_code"
+      "label": "user_code, device_code",
+      "color": "blue"
     },
     {
       "source": "person",
       "target": "page",
-      "label": "enter code, sign in"
+      "label": "enter code, sign in",
+      "color": "green"
     },
     {
       "source": "lab",
       "target": "token",
-      "label": "poll with device_code"
+      "label": "poll with device_code",
+      "color": "dark"
     },
     {
       "source": "token",
       "target": "lab",
-      "label": "tokens once approved"
+      "label": "tokens once approved",
+      "color": "dark"
     }
   ],
   "steps": [

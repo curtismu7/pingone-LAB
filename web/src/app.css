@@ -261,3 +261,14 @@ main { background: var(--bg); color: var(--text-body); border-radius: 8px; paddi
 }
 .mode-toggle button:disabled { opacity: 0.6; }
 .mode-toggle button:disabled { opacity: 0.6; }
+
+/* Per-edge phase colors (owner, 2026-11-03): a colored line per flow phase, from the shared --dg-* tokens.
+   An edge with "color": "<role>" in the diagram data gets that role's stripe color; the active hop still wins (accent). */
+.edge-red .react-flow__edge-path { stroke: var(--dg-red); }
+.edge-blue .react-flow__edge-path { stroke: var(--dg-blue); }
+.edge-green .react-flow__edge-path { stroke: var(--dg-green); }
+.edge-dark .react-flow__edge-path { stroke: var(--dg-dark); }
+.edge-grey .react-flow__edge-path { stroke: var(--dg-grey); }
+.edge-amber .react-flow__edge-path { stroke: var(--dg-amber); }
+.edge-red.edge-on .react-flow__edge-path, .edge-blue.edge-on .react-flow__edge-path, .edge-green.edge-on .react-flow__edge-path,
+.edge-dark.edge-on .react-flow__edge-path, .edge-grey.edge-on .react-flow__edge-path, .edge-amber.edge-on .react-flow__edge-path { stroke: var(--accent); }
