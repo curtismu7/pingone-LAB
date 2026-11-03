@@ -9,5 +9,8 @@
   "composeOverlays": [],
   "port": 5500,
   "notes": "Host-run: npm install && npm run build && npm start (http://127.0.0.1:5500, loopback only). Mock by default: no settings needed, and mock sign-in is on for the demo user. Docker: docker compose up --build -d (mock by default, no .env needed; publishes 127.0.0.1:5500 only). Live mode and https: docker-compose.live.yml and the README. Catalog id A29 was accepted by the owner on 2026-10-31.",
-  "catalogId": "A29"
+  "catalogId": "A29",
+  "pingProducts": [
+    "pingone"
+  ]
 }
