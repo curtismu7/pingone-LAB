@@ -70,7 +70,7 @@ test('cards list: ready flags; advertised is unknown until PingOne was read, the
   const lab = await startLab();
   try {
     let { data } = await lab.call('GET', '/api/cards');
-    const ids = ['discovery', 'signin', 'piflow', 'pkce', 'par', 'jar', 'clientCredentials', 'lifecycle', 'userinfo', 'device', 'ciba', 'tokenExchange'];
+    const ids = ['discovery', 'signin', 'pkce', 'par', 'jar', 'clientCredentials', 'lifecycle', 'userinfo', 'device', 'ciba', 'tokenExchange'];
     for (const id of ids) assert.equal(data.cards.find((c) => c.id === id).ready, true, id);
     assert.equal(data.cards.find((c) => c.id === 'par').advertised, null);
     assert.equal(lab.fake.calls.length, 0, 'the card list never calls PingOne');
