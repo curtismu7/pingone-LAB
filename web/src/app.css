@@ -159,15 +159,8 @@ main { background: var(--bg); color: var(--text-body); border-radius: 8px; paddi
 .lede { color: var(--muted); margin: 0 0 6px; max-width: 80ch; }
 .dg-toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
 .dg-canvas { height: 440px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); }
-.dg-now { margin: 6px 0; background: var(--surface-2); color: var(--text); border-left: 4px solid var(--accent); padding: 6px 10px; }
-.dg-node { padding: 8px 12px 8px 10px; border-radius: 4px; background: var(--surface); color: var(--text); max-width: 240px; font-size: 13px; display: flex; flex-direction: column; gap: 2px; border: 2px solid var(--border); border-left-width: 6px; }
-.dg-node span { font-size: 12px; overflow-wrap: anywhere; color: var(--text-body); }
-.dg-dark { border-left-color: var(--text); }
-.dg-blue { border-left-color: var(--focus); }
-.dg-red { border-left-color: var(--accent); }
-.dg-grey { border-left-color: var(--muted); }
-.dg-green { border-left-color: var(--status-ok); }
-.dg-amber { border-left-color: var(--accent-deep); }
+.dg-now { margin: 6px 0; } /* colors: shared .dg-now */
+.dg-node { max-width: 240px; } /* colors, stripe and hot state: shared standalone-ui.css .dg-node / .dg-<role> */
 .react-flow__handle.handle-back { top: 70%; opacity: 0; pointer-events: none; }
 .react-flow { --xy-edge-stroke: var(--muted); --xy-background-color: var(--surface); --xy-edge-label-color: var(--text); --xy-edge-label-background-color: var(--surface); }
 .react-flow__edge-textbg { fill: var(--surface); }
