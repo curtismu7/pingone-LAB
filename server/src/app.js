@@ -16,6 +16,7 @@ import { createGrants } from './grants.js';
 import { cardList, discoveryCheck } from './cards.js';
 import { createSessions, cookieName } from './session.js';
 import { tokenView, traceContext } from './trace.js';
+import { shelfInfo } from './shelfLink.js';
 
 export const DEMO = { id: 'pingone-lab', name: 'PingOne Lab', version: '0.1.0' };
 // Authorization-code cards on the pi.flow engine, and what each start sends.
@@ -276,6 +277,7 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
 
   // The built web UI, when it exists. Registered last so it never shadows an API route.
   if (fs.existsSync(path.join(webDist, 'index.html'))) {
+app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
     app.use(express.static(webDist, { index: 'index.html' }));
     app.get(/^\/(?!api(\/|$)).*/, (req, res) => res.sendFile(path.join(webDist, 'index.html')));
   }
