@@ -140,7 +140,7 @@ export default function App() {
         <div className="brand">
           <img className="brand__logo" src="/ping-logo.png" alt="Ping Identity" width="36" height="36" />
           <h1><a href="#/">{name}</a></h1>
-        <ShelfLink />
+        <ShelfLink headers={() => ({ 'x-lab-workspace': currentWorkspace() })} />
           {config?.customer?.tagline && <p className="tagline">{config.customer.tagline}</p>}
         </div>
         <nav className="nav" aria-label="Main">
