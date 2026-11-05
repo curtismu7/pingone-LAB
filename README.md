@@ -6,7 +6,7 @@ Every PingOne feature for apps and AI agents on one shelf, run against a simulat
 
 Tier: Demo
 
-Repo: https://github.com/ping-sandbox/pingone-LAB
+Repo: https://github.com/curtismu7/pingone-LAB
 
 Catalog: A29 (accepted by the owner, 2026-10-31); `content-pack.json` carries it in `demo.catalog`.
 
@@ -31,7 +31,7 @@ Rules: `~/Development/STANDALONE-RULES-FOR-AGENTS.md` and `~/Development/STANDAL
 Prerequisites: Node 26 (Docker only for the Docker form).
 
 ```sh
-git clone https://github.com/ping-sandbox/pingone-LAB.git
+git clone https://github.com/curtismu7/pingone-LAB.git
 cd pingone-LAB
 npm install
 npm run build        # builds web/dist, which the server serves
