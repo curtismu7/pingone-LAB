@@ -10,7 +10,7 @@ services:
     ports:
       - "127.0.0.1:5500:5500"
     environment:
-      SHELF_URL: ${SHELF_URL:-}
+      SHELF_URL: ${SHELF_URL:-http://127.0.0.1:4400}
       PORT: "5500"
       LAB_BIND: 0.0.0.0
       # Inside the container the lab binds 0.0.0.0, but the port above is published on 127.0.0.1 only. The lab

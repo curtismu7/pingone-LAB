@@ -275,9 +275,10 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
     return { ok: true, workspace: req.session.workspace, sessions: cleared, ...kept };
   }));
 
+  // The header "Shelf" button. Always mounted (not only when a web build exists), and before the web fallback.
+  app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
   // The built web UI, when it exists. Registered last so it never shadows an API route.
   if (fs.existsSync(path.join(webDist, 'index.html'))) {
-app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
     app.use(express.static(webDist, { index: 'index.html' }));
     app.get(/^\/(?!api(\/|$)).*/, (req, res) => res.sendFile(path.join(webDist, 'index.html')));
   }
