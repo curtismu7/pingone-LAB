@@ -81,7 +81,7 @@ If the port is taken:
 To remap a port, set `PORT` and the published port to the same number (in Docker: the `ports` entry, `PORT` and the
 health-check port in `docker-compose.yml`), because the Host check only accepts the port the lab listens on.
 `LAB_ALLOWED_HOSTS` (comma-separated host names that point at this Mac) adds extra names. Docker defaults it to
-`pingone-lab.local.ping-devops.com`, the Host the family lab-proxy sends; on that Host only, a write whose Origin equals
+the Host the family lab-proxy sends for this lab (the `LAB_ALLOWED_HOSTS` value in `docker-compose.yml`); on that Host only, a write whose Origin equals
 `X-Forwarded-Proto://X-Forwarded-Host` (the proxy's own origin) counts as same-origin. Mock sign-in works through that launcher only (forwarded origin exactly
 `https://local.ping-devops.com:8443`); any other proxy is refused.
 
