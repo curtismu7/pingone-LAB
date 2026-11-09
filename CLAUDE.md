@@ -13,7 +13,7 @@ and ~/Development/STANDALONE-CSS-STANDARD.md (use the standalone-demo skill). Po
   (`server/test/fakep1.js`) is the same mock placed on PingOne's real host name.
 - Live: outbound ONLY to the configured environment (`https://auth.pingone.<region>/<environment id>/...`) through
   `server/src/outbound.js`; no other module but the netguard may call fetch.
-- Mock sign-in needs `ALLOW_MOCK_SIGNIN=1` (plain `npm start` sets it itself on a loopback bind with no PingOne environment: `hostRunMockSignin` in `server/src/app.js`; `=0` turns it off); refused behind a proxy or on a non-loopback bind (`LAB_IN_CONTAINER=1`
+- Mock sign-in needs `ALLOW_MOCK_SIGNIN=1` (plain `npm start` sets it itself on a loopback bind with no PingOne environment: `hostRunMockSignin` in `server/src/app.js`; `=0` turns it off); refused behind a proxy (except the family launcher, `LAUNCHER_ORIGIN` / `isLauncherRequest`) or on a non-loopback bind (`LAB_IN_CONTAINER=1`
   marks the Docker case and only counts inside a real container). `NODE_ENV=production` is NOT a guard (the image sets it). Demo user `alice` / `correct-horse-battery` exists only in the mock.
 
 ## Look
