@@ -82,7 +82,8 @@ To remap a port, set `PORT` and the published port to the same number (in Docker
 health-check port in `docker-compose.yml`), because the Host check only accepts the port the lab listens on.
 `LAB_ALLOWED_HOSTS` (comma-separated host names that point at this Mac) adds extra names. Docker defaults it to
 `pingone-lab.local.ping-devops.com`, the Host the family lab-proxy sends; on that Host only, a write whose Origin equals
-`X-Forwarded-Proto://X-Forwarded-Host` (the proxy's own origin) counts as same-origin. Mock sign-in stays refused behind the proxy.
+`X-Forwarded-Proto://X-Forwarded-Host` (the proxy's own origin) counts as same-origin. Mock sign-in works through that launcher only (forwarded origin exactly
+`https://local.ping-devops.com:8443`); any other proxy is refused.
 
 ## Mock and live modes
 
@@ -97,7 +98,7 @@ says which mode is on. The choice is saved in the settings file (`mode`). With n
 - **Mock sign-in** (rule 11): needs `ALLOW_MOCK_SIGNIN=1`. Docker sets it in `docker-compose.yml`; plain `npm start`
   sets it for you when the lab binds loopback and no PingOne environment is configured (`ALLOW_MOCK_SIGNIN=0` turns it
   off, and a configured environment or a wider bind leaves it off). It is refused behind a proxy
-  (`Forwarded`, `X-Forwarded-*`, `Via`) and on a non-loopback bind. Docker binds 0.0.0.0 inside the container
+  (`Forwarded`, `X-Forwarded-*`, `Via`), except the family launcher at `https://local.ping-devops.com:8443`, and on a non-loopback bind. Docker binds 0.0.0.0 inside the container
   (`LAB_IN_CONTAINER=1`, honoured only when the process really is in a container: `/.dockerenv` or a container
   runtime in the cgroup of process 1) while compose publishes 127.0.0.1 only. `NODE_ENV=production` is **not** a
   guard: the Docker image sets it and mock sign-in still works there, by design.
@@ -155,7 +156,7 @@ On Node 26 (v26.8.2): server 118/118, web 67/67; smoke 28/28 checks.
 1. **A card says "Not advertised".** Your PingOne does not offer that feature; nothing is broken. Settings > discovery
    check lists what it advertises.
 2. **"Mock sign-in is off".** With a PingOne environment configured (or `ALLOW_MOCK_SIGNIN=0`), start with
-   `ALLOW_MOCK_SIGNIN=1 npm start`. Docker sets it. It is refused behind a proxy.
+   `ALLOW_MOCK_SIGNIN=1 npm start`. Docker sets it. It is refused behind any proxy but the family launcher.
 3. **"Sign-in expired (404)".** A pi.flow lives 15 minutes. Press Run again.
 4. **The port is taken.** See "Ports" above.
 5. **Everything signed out after a rebuild.** Sessions are in memory only; sign in again.

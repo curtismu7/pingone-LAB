@@ -11,7 +11,7 @@ import { htmlExcerpt, rawFlowBody } from '../src/piflow.js';
 import { createOutbound, OutboundRefused } from '../src/outbound.js';
 import { createEcKey, signEs256, verifyIdToken, JwtInvalid } from '../src/jose.js';
 import { createSettings, SettingsError } from '../src/settings.js';
-import { createApp, labAddresses } from '../src/app.js';
+import { createApp, labAddresses, mockSigninRefusalFor, isLauncherRequest, LAUNCHER_ORIGIN } from '../src/app.js';
 import { plan, ROLES } from '../../scripts/provision-p1.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -361,19 +361,80 @@ test('lab-proxy: a proxied write is accepted only on an allowed Host whose forwa
   } finally { await lab.close(); }
 });
 
-test('lab-proxy: a proxied write passes the Origin check but mock sign-in is still refused behind the proxy', async () => {
+// 12d. Mock sign-in through the family launcher (owner, 2026-11-09): allowed only when the forwarded origin is exactly
+// https://local.ping-devops.com:8443 on an allowed Host; every other proxied request is still refused.
+const LAUNCHER = { xfh: 'local.ping-devops.com:8443', origin: 'https://local.ping-devops.com:8443' };
+function rawClient(port) {
+  let cookie = '';
+  return (method, route, headers, body) => new Promise((resolve, reject) => {
+    const req = http.request({ host: '127.0.0.1', port, path: route, method, headers: { ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(cookie ? { cookie } : {}), ...headers } }, (r) => {
+      const set = r.headers['set-cookie'];
+      if (set?.length) cookie = set.at(-1).split(';')[0];
+      let b = ''; r.on('data', (d) => { b += d; }); r.on('end', () => { let data = null; try { data = JSON.parse(b); } catch { /* not json */ } resolve({ status: r.statusCode, data, body: b }); });
+    });
+    req.on('error', reject); req.end(body === undefined ? undefined : JSON.stringify(body));
+  });
+}
+
+test('launcher: mock sign-in through https://local.ping-devops.com:8443 works end to end, GET included', async () => {
   const name = 'pingone-lab.local.ping-devops.com';
   const lab = await startLab({ settings: null, mode: 'mock', env: { LAB_ALLOWED_HOSTS: name, ALLOW_MOCK_SIGNIN: '1' } });
   try {
-    const res = await new Promise((resolve, reject) => {
-      const req = http.request({ host: '127.0.0.1', port: lab.port, path: '/api/signin/start', method: 'POST', headers: { 'Content-Type': 'application/json', host: `${name}:${lab.port}`, 'x-forwarded-host': 'local.ping-devops.com:8443', 'x-forwarded-proto': 'https', origin: 'https://local.ping-devops.com:8443' } }, (r) => {
-        let b = ''; r.on('data', (d) => { b += d; }); r.on('end', () => resolve({ status: r.statusCode, body: b }));
-      });
-      req.on('error', reject); req.end('{}');
-    });
-    assert.equal(res.status, 403);
-    assert.match(res.body, /mock_signin_refused/);
+    const send = rawClient(lab.port);
+    const fwd = { host: `${name}:${lab.port}`, 'x-forwarded-host': LAUNCHER.xfh, 'x-forwarded-proto': 'https' };
+    // A same-origin GET carries no Origin: the Host and forwarded parts of the rule decide.
+    const config = await send('GET', '/api/config', fwd);
+    assert.equal(config.data.mockSignin.allowed, true);
+    const write = { ...fwd, origin: LAUNCHER.origin };
+    assert.equal((await send('POST', '/api/signin/start', write, {})).data.state, 'credentials_required');
+    const signed = await send('POST', '/api/signin/credentials', write, { username: 'alice', password: 'correct-horse-battery' });
+    assert.equal(signed.data.outcome, 'accepted');
+    assert.equal((await send('GET', '/api/me', fwd)).data.signedIn, true);
+    // The card flows use the same guard (signed in already, so the mock's session may finish the flow at once).
+    const card = await send('POST', '/api/cards/pkce/start', write, {});
+    assert.equal(card.status, 200, card.body);
+    assert.ok(['credentials_required', 'done'].includes(card.data.state), card.body);
   } finally { await lab.close(); }
+});
+
+test('launcher: any other forwarded host or proto is still refused; loopback is unchanged', async () => {
+  const name = 'pingone-lab.local.ping-devops.com';
+  const lab = await startLab({ settings: null, mode: 'mock', env: { LAB_ALLOWED_HOSTS: name, ALLOW_MOCK_SIGNIN: '1' } });
+  try {
+    const send = rawClient(lab.port);
+    const host = `${name}:${lab.port}`;
+    // Each passes the write Origin check (Origin === proto://xfh) but is not the launcher, so mock sign-in is refused.
+    for (const [xfh, xfp] of [['local.ping-devops.com:9443', 'https'], ['evil.example', 'https'], ['local.ping-devops.com', 'https'], [LAUNCHER.xfh, 'http']]) {
+      const headers = { host, 'x-forwarded-host': xfh, 'x-forwarded-proto': xfp };
+      const res = await send('POST', '/api/signin/start', { ...headers, origin: `${xfp}://${xfh}` }, {});
+      assert.equal(res.status, 403, `${xfp}://${xfh}`);
+      assert.match(res.body, /mock_signin_refused/);
+      assert.deepEqual((await send('GET', '/api/config', headers)).data.mockSignin, { allowed: false }, `${xfp}://${xfh}`);
+    }
+    // Launcher headers plus another proxy hop's Origin on a GET: refused.
+    assert.deepEqual((await send('GET', '/api/config', { host, 'x-forwarded-host': LAUNCHER.xfh, 'x-forwarded-proto': 'https', origin: 'https://evil.example' })).data.mockSignin, { allowed: false });
+    // Launcher headers on a loopback Host do not count: the GET shows no demo user and the write is refused.
+    const loop = { host: `127.0.0.1:${lab.port}`, 'x-forwarded-host': LAUNCHER.xfh, 'x-forwarded-proto': 'https' };
+    assert.deepEqual((await send('GET', '/api/config', loop)).data.mockSignin, { allowed: false });
+    assert.equal((await send('POST', '/api/signin/start', { ...loop, origin: LAUNCHER.origin }, {})).status, 403);
+    // Plain loopback, no proxy headers: unchanged.
+    assert.equal((await send('GET', '/api/config', { host: `127.0.0.1:${lab.port}` })).data.mockSignin.allowed, true);
+    assert.equal((await send('POST', '/api/signin/start', { host: `127.0.0.1:${lab.port}`, origin: lab.base }, {})).data.state, 'credentials_required');
+  } finally { await lab.close(); }
+});
+
+test('mockSigninRefusalFor: the launcher exemption keeps the flag and the bind checks', () => {
+  const hosts = new Set(['pingone-lab.local.ping-devops.com:5500']);
+  const req = { method: 'POST', headers: { host: 'pingone-lab.local.ping-devops.com:5500', 'x-forwarded-host': LAUNCHER.xfh, 'x-forwarded-proto': 'https', origin: LAUNCHER.origin } };
+  assert.equal(LAUNCHER_ORIGIN, LAUNCHER.origin);
+  assert.equal(mockSigninRefusalFor(req, { ALLOW_MOCK_SIGNIN: '1' }, () => false, hosts), null);
+  assert.match(mockSigninRefusalFor(req, {}, () => false, hosts), /ALLOW_MOCK_SIGNIN/);
+  assert.match(mockSigninRefusalFor(req, { ALLOW_MOCK_SIGNIN: '1', LAB_BIND: '0.0.0.0', LAB_IN_CONTAINER: '1' }, () => false, hosts), /beyond loopback/);
+  assert.equal(mockSigninRefusalFor(req, { ALLOW_MOCK_SIGNIN: '1', LAB_BIND: '0.0.0.0', LAB_IN_CONTAINER: '1' }, () => true, hosts), null);
+  assert.match(mockSigninRefusalFor(req, { ALLOW_MOCK_SIGNIN: '1' }), /proxy/, 'no allowed names: the launcher headers are just a proxy');
+  // A write without an Origin is not the launcher.
+  assert.match(mockSigninRefusalFor({ ...req, headers: { ...req.headers, origin: undefined } }, { ALLOW_MOCK_SIGNIN: '1' }, () => false, hosts), /proxy/);
+  assert.equal(isLauncherRequest({ method: 'GET', headers: { ...req.headers, origin: undefined } }, hosts), true);
 });
 
 test('labAddresses: only LAB_ALLOWED_HOSTS names (never loopback) may vouch for a forwarded origin', () => {

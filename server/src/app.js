@@ -79,16 +79,34 @@ export function insideContainer(readFile = fs.readFileSync, exists = fs.existsSy
   try { return /docker|containerd|kubepods|libpod/.test(String(readFile('/proc/1/cgroup', 'utf8'))); } catch { return false; }
 }
 
-export function mockSigninRefusalFor(req, env, inContainer = insideContainer) {
+// The family launcher (the lab-proxy in AI-DEMO-Standalone, shared/lab-proxy) is the one proxy mock sign-in is allowed
+// through (owner decision, 2026-11-09). Deliberately a constant, not a setting: any other proxy is still refused.
+export const LAUNCHER_ORIGIN = 'https://local.ping-devops.com:8443';
+const LAUNCHER_FORWARDED_HOST = 'local.ping-devops.com:8443';
+
+// True only for a request the launcher forwarded: Host is one of this lab's LAB_ALLOWED_HOSTS names (never loopback),
+// X-Forwarded-Proto is https and X-Forwarded-Host is the launcher's. A write must carry the launcher's Origin; a GET
+// may carry none (a same-origin browser GET sends none), and if it carries one it must be the launcher's.
+export function isLauncherRequest(req, proxyHosts) {
+  const h = req.headers;
+  if (!proxyHosts.has(String(h.host || '').toLowerCase())) return false;
+  if (String(h['x-forwarded-proto'] || '').trim().toLowerCase() !== 'https') return false;
+  if (String(h['x-forwarded-host'] || '').trim().toLowerCase() !== LAUNCHER_FORWARDED_HOST) return false;
+  const read = req.method === 'GET' || req.method === 'HEAD';
+  if (h.origin === undefined) return read;
+  return h.origin === LAUNCHER_ORIGIN && isProxiedSameOrigin(h, proxyHosts);
+}
+
+export function mockSigninRefusalFor(req, env, inContainer = insideContainer, proxyHosts = new Set()) {
   if (env.ALLOW_MOCK_SIGNIN !== '1') return 'Mock sign-in is off: start the lab with ALLOW_MOCK_SIGNIN=1 to sign in to the mock PingOne.';
-  if (PROXY_HEADERS.some((h) => req.headers[h] !== undefined)) return 'Mock sign-in is refused behind a proxy.';
+  if (PROXY_HEADERS.some((h) => req.headers[h] !== undefined) && !isLauncherRequest(req, proxyHosts)) return 'Mock sign-in is refused behind a proxy.';
   if (env.LAB_BIND === '0.0.0.0' && !(env.LAB_IN_CONTAINER === '1' && inContainer())) return 'Mock sign-in is refused when the lab listens beyond loopback.';
   return null;
 }
 
 // Host-run default (index.js, plain `npm start`): a lab on loopback with no PingOne environment configured runs mock,
 // so mock sign-in is on unless the person chose (ALLOW_MOCK_SIGNIN set, even to 0). Anything wider than loopback, or a
-// configured tenant, keeps it off; a proxy is still refused per request by mockSigninRefusalFor.
+// configured tenant, keeps it off; a proxy (other than the family launcher) is still refused per request by mockSigninRefusalFor.
 export function hostRunMockSignin({ env, bind, tenantConfigured }) {
   return !env.ALLOW_MOCK_SIGNIN && bind === '127.0.0.1' && !tenantConfigured;
 }
@@ -100,7 +118,7 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
   const isMock = () => settings.mode() === 'mock';
   // Rule 19: Real is available only when the live configuration is complete (every required setting for every card).
   const liveConfigured = () => Object.keys(REQUIRED).every((card) => (REQUIRED[card] || []).every(([s, f]) => Boolean(settings.liveValue(s, f))));
-  const mockSigninRefusal = (req) => mockSigninRefusalFor(req, env);
+  const mockSigninRefusal = (req) => mockSigninRefusalFor(req, env, insideContainer, addresses.proxyHosts);
   // Mock mode: the in-process mock PingOne answers every call (no call log, bounded state); the real fetch sits
   // behind the netguard, which refuses anything while the lab is in mock mode.
   const mock = createMockP1({ track: false, clients: mockClientTable() });
@@ -216,8 +234,8 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
 
   // Sign-in: pi.flow only. Tokens stay in the session; /api/me shows them masked, with claims.
   // Signed in only with a verified identity; the session id is rotated so a planted id cannot ride the sign-in.
-  // Rule 11: signing in to the mock needs ALLOW_MOCK_SIGNIN=1, and is refused behind a proxy or on a non-loopback
-  // bind. Docker binds 0.0.0.0 inside the container (LAB_IN_CONTAINER=1) while compose publishes 127.0.0.1 only.
+  // Rule 11: signing in to the mock needs ALLOW_MOCK_SIGNIN=1, and is refused behind a proxy (except the family
+  // launcher, isLauncherRequest) or on a non-loopback bind. Docker binds 0.0.0.0 inside the container (LAB_IN_CONTAINER=1) while compose publishes 127.0.0.1 only.
   const mockGuard = (req) => {
     if (!isMock()) return;
     const why = mockSigninRefusal(req);

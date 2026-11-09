@@ -17,7 +17,7 @@ services:
       # only honours this flag when the process really is in a container (/.dockerenv or the cgroup of process 1).
       LAB_IN_CONTAINER: "1"
       # Mock mode: allow signing in to the mock PingOne's demo user (rule 11). Mock sign-in is still refused
-      # behind a proxy. Live mode is not affected. (NODE_ENV=production is not a guard; the image sets it.)
+      # behind a proxy, except the family launcher (https://local.ping-devops.com:8443). Live mode is not affected. (NODE_ENV=production is not a guard; the image sets it.)
       ALLOW_MOCK_SIGNIN: "1"
       P1LAB_SETTINGS_FILE: /config/pingone-lab.json
       # The family's shared env file is not mounted: set the environment on the Settings page instead.
