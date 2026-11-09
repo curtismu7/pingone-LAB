@@ -319,3 +319,64 @@ test('provision-p1: the script never applies by default and never prints a secre
   assert.ok(!/console\.log\([^)]*[Ss]ecret[^)]*\)/.test(source.replace(/clientSecret: '<set>'/g, '')), 'no secret in console output');
   assert.ok(!source.includes('NODE_TLS_REJECT_UNAUTHORIZED'));
 });
+
+// 12c. Behind the family lab-proxy (https://local.ping-devops.com:8443/pingone-lab/): Host is this lab's
+// LAB_ALLOWED_HOSTS name, the browser's Origin is the proxy's, and the proxy says so in X-Forwarded-Host/-Proto.
+test('lab-proxy: a proxied write is accepted only on an allowed Host whose forwarded origin matches the Origin', async () => {
+  const name = 'pingone-lab.local.ping-devops.com';
+  const proxyOrigin = 'https://local.ping-devops.com:8443';
+  const lab = await startLab({ env: { LAB_ALLOWED_HOSTS: name } });
+  try {
+    const post = (headers) => new Promise((resolve, reject) => {
+      const req = http.request({ host: '127.0.0.1', port: lab.port, path: '/api/p1/discovery', method: 'POST', headers: { 'Content-Type': 'application/json', ...headers } }, (res) => {
+        let b = ''; res.on('data', (d) => { b += d; }); res.on('end', () => resolve({ status: res.statusCode, body: b }));
+      });
+      req.on('error', reject); req.end('{}');
+    });
+    const proxied = { host: `${name}:${lab.port}`, 'x-forwarded-host': 'local.ping-devops.com:8443', 'x-forwarded-proto': 'https' };
+    // Accepted: allowed Host, forwarded headers present, Origin === proto://xfh.
+    assert.equal((await post({ ...proxied, origin: proxyOrigin })).status, 200);
+    // A foreign Origin is refused, and so is an Origin that does not match the forwarded host or scheme.
+    for (const origin of ['https://evil.example', 'http://local.ping-devops.com:8443', 'https://local.ping-devops.com']) {
+      const res = await post({ ...proxied, origin });
+      assert.equal(res.status, 403, origin);
+      assert.match(res.body, /cross_origin_write_refused/);
+    }
+    // A forwarded host that claims the attacker's origin does not help either: it must equal the Origin, and the
+    // proto must be http or https.
+    assert.equal((await post({ ...proxied, 'x-forwarded-proto': 'ftp', origin: 'ftp://local.ping-devops.com:8443' })).status, 403);
+    assert.equal((await post({ ...proxied, 'x-forwarded-host': '', origin: 'https://' })).status, 403);
+    // Forwarded headers on a loopback Host are ignored (loopback does not vouch for a proxy).
+    const loopback = await post({ host: `127.0.0.1:${lab.port}`, 'x-forwarded-host': 'evil.example', 'x-forwarded-proto': 'https', origin: 'https://evil.example' });
+    assert.equal(loopback.status, 403);
+    assert.match(loopback.body, /cross_origin_write_refused/);
+    const loopback2 = await post({ host: `localhost:${lab.port}`, 'x-forwarded-host': 'local.ping-devops.com:8443', 'x-forwarded-proto': 'https', origin: proxyOrigin });
+    assert.equal(loopback2.status, 403);
+    // A Host that is not in the set is refused before any Origin check, forwarded headers or not.
+    for (const host of [`local.ping-devops.com:${lab.port}`, `evil.example:${lab.port}`, `${name}:1`]) {
+      const res = await post({ ...proxied, host, origin: proxyOrigin });
+      assert.equal(res.status, 403, host);
+      assert.match(res.body, /host_not_allowed/);
+    }
+  } finally { await lab.close(); }
+});
+
+test('lab-proxy: a proxied write passes the Origin check but mock sign-in is still refused behind the proxy', async () => {
+  const name = 'pingone-lab.local.ping-devops.com';
+  const lab = await startLab({ settings: null, mode: 'mock', env: { LAB_ALLOWED_HOSTS: name, ALLOW_MOCK_SIGNIN: '1' } });
+  try {
+    const res = await new Promise((resolve, reject) => {
+      const req = http.request({ host: '127.0.0.1', port: lab.port, path: '/api/signin/start', method: 'POST', headers: { 'Content-Type': 'application/json', host: `${name}:${lab.port}`, 'x-forwarded-host': 'local.ping-devops.com:8443', 'x-forwarded-proto': 'https', origin: 'https://local.ping-devops.com:8443' } }, (r) => {
+        let b = ''; r.on('data', (d) => { b += d; }); r.on('end', () => resolve({ status: r.statusCode, body: b }));
+      });
+      req.on('error', reject); req.end('{}');
+    });
+    assert.equal(res.status, 403);
+    assert.match(res.body, /mock_signin_refused/);
+  } finally { await lab.close(); }
+});
+
+test('labAddresses: only LAB_ALLOWED_HOSTS names (never loopback) may vouch for a forwarded origin', () => {
+  assert.deepEqual([...labAddresses({ port: 5500, env: {} }).proxyHosts], []);
+  assert.deepEqual([...labAddresses({ port: 5500, env: { LAB_ALLOWED_HOSTS: 'pingone-lab.local.ping-devops.com' } }).proxyHosts], ['pingone-lab.local.ping-devops.com:5500']);
+});

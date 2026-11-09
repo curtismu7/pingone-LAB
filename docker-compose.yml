@@ -22,8 +22,9 @@ services:
       P1LAB_SETTINGS_FILE: /config/pingone-lab.json
       # The family's shared env file is not mounted: set the environment on the Settings page instead.
       P1LAB_SHARED_FILE: ""
-      # Extra names the lab answers to besides 127.0.0.1 and localhost; every other Host is still refused.
-      LAB_ALLOWED_HOSTS: ${LAB_ALLOWED_HOSTS:-}
+      # Extra names the lab answers to besides 127.0.0.1 and localhost; every other Host is still refused. The default is
+      # the name the family lab-proxy (https://local.ping-devops.com:8443/pingone-lab/) sends in Host.
+      LAB_ALLOWED_HOSTS: ${LAB_ALLOWED_HOSTS:-pingone-lab.local.ping-devops.com}
     volumes:
       # The lab's own settings (mode and, in live mode, your PingOne environment and clients). A named volume, so a
       # fresh clone needs no folder; docker-compose.live.yml swaps it for your settings folder.

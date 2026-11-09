@@ -167,6 +167,8 @@ test('docker-compose: mock-only start needs no .env or certificate, publishes 12
   const live = fs.readFileSync(path.join(dir, 'docker-compose.live.yml'), 'utf8');
   assert.match(compose, /ALLOW_MOCK_SIGNIN: "1"/);
   assert.match(compose, /LAB_IN_CONTAINER: "1"/);
+  // The family lab-proxy's name for this lab is allowed by default; never the bare proxy name.
+  assert.match(compose, /LAB_ALLOWED_HOSTS: \$\{LAB_ALLOWED_HOSTS:-pingone-lab\.local\.ping-devops\.com\}/);
   assert.match(compose, /- "127\.0\.0\.1:5500:5500"/);
   assert.ok(!/- "5500:5500"|0\.0\.0\.0:5500|- 5500:5500/.test(compose), 'never published on all interfaces');
   assert.ok(!compose.includes(':?'), 'the mock-only form requires no variable');
