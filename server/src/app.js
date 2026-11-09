@@ -53,8 +53,21 @@ export function labAddresses({ port, env = process.env }) {
   return {
     scheme,
     hosts: new Set(names.map((n) => `${n}:${port}`)),
+    // Only these Hosts (the LAB_ALLOWED_HOSTS names, never loopback) may vouch for a lab-proxy's forwarded origin.
+    proxyHosts: new Set(extra.map((n) => `${n}:${port}`)),
     origins: new Set(names.map((n) => `${scheme}://${n}:${port}`)),
   };
+}
+
+// Behind the family lab-proxy the browser's origin is the proxy's (https://local.ping-devops.com:8443) while Host is
+// this lab's own LAB_ALLOWED_HOSTS name. X-Forwarded-Host/-Proto are believed only when Host is one of those names, so
+// a request that did not come through the proxy (loopback Host, or any other Host) cannot use them.
+export function isProxiedSameOrigin(headers, proxyHosts) {
+  const origin = headers.origin;
+  const xfh = String(headers['x-forwarded-host'] || '').trim().toLowerCase();
+  const xfp = String(headers['x-forwarded-proto'] || '').trim().toLowerCase();
+  return proxyHosts.has(String(headers.host || '').toLowerCase()) && xfh !== '' && (xfp === 'https' || xfp === 'http')
+    && origin === `${xfp}://${xfh}`;
 }
 
 const PROXY_HEADERS = ['forwarded', 'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'via'];
@@ -136,7 +149,7 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
     if (req.method === 'GET' || req.method === 'HEAD') return next();
     const origin = req.headers.origin;
     const site = req.headers['sec-fetch-site'];
-    if (origin && !allowedOrigins.has(origin)) return res.status(403).json({ error: 'cross_origin_write_refused' });
+    if (origin && !allowedOrigins.has(origin) && !isProxiedSameOrigin(req.headers, addresses.proxyHosts)) return res.status(403).json({ error: 'cross_origin_write_refused' });
     if (site && site !== 'same-origin' && site !== 'none') return res.status(403).json({ error: 'cross_origin_write_refused' });
     // A cross-site form cannot send application/json without a preflight, so every write must be JSON.
     if (!String(req.headers['content-type'] || '').startsWith('application/json')) return res.status(415).json({ error: 'json_required' });
