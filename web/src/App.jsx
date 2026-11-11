@@ -176,7 +176,7 @@ export default function App() {
               ? { subject: signedInAs, onSignOut: signOut }
               : { subject: null, onSignIn: signIn }}
           >
-            <ShelfLink />
+            <ShelfLink headers={() => ({ "x-lab-workspace": currentWorkspace() })} />
           </TopMenu>
         </div>
       </header>
