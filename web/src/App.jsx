@@ -5,6 +5,7 @@ import RunView from './views/RunView.jsx';
 import Settings from './views/Settings.jsx';
 import Playground from './views/Playground.jsx';
 import ShelfLink from "./components/ShelfLink.jsx";
+import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
 
 // Hash routes: #/ (shelf), #/run/<card>, #/settings[/<section.field>], #/playground.
 export function parseRoute(hash) {
@@ -44,6 +45,7 @@ export default function App() {
   const [vertical, setVertical] = useState(() => read('p1lab-vertical', ''));
   const [story, setStory] = useState(null);
   const [theme, setTheme] = useState(() => (THEMES.includes(read('p1lab-theme', 'auto')) ? read('p1lab-theme', 'auto') : 'auto'));
+  const [fontStep, setFontStep] = useState(() => (['S', 'M', 'L'].includes(read('p1lab-font', 'M')) ? read('p1lab-font', 'M') : 'M'));
   const [presenter, setPresenter] = useState(() => new URLSearchParams(window.location.search).get('present') === '1');
   const [loadError, setLoadError] = useState(null);
   // Set by the header's Sign in: the sign-in card starts its flow as soon as it shows, instead of waiting for Run.
@@ -78,6 +80,10 @@ export default function App() {
     if (theme === 'auto') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', theme);
     write('p1lab-theme', theme);
   }, [theme]);
+  useEffect(() => {
+    applyFontSize(fontStep);
+    write('p1lab-font', fontStep);
+  }, [fontStep]);
   // A customer.config accent (checked on the server for white text at 4.5:1) replaces Ping red at run time, in both
   // themes. Without one, the shared Ping red stands.
   useEffect(() => {
@@ -149,37 +155,29 @@ export default function App() {
           <a href="#/settings" aria-current={route.view === 'settings' ? 'page' : undefined}>Settings</a>
         </nav>
         <div className="prefs">
-          <div className="mode-toggle" role="group" aria-label="Mode" data-testid="mode">
-            {[
-              ['mock', 'Mock', false],
-              ['live', 'Real', true],
-            ].map(([m, label, isReal]) => {
-              const off = modeBusy || (isReal && realAvailable === false);
-              const why = isReal && realAvailable === false && realReason ? realReason : undefined;
-              return (
-                <button key={m} type="button" className="mode-toggle__button" aria-pressed={(config?.mode || 'mock') === m} disabled={off} title={why} onClick={() => switchMode(m === 'live' ? 'live' : 'mock')} data-testid={`mode-${m === 'live' ? 'real' : 'mock'}`}>
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-          <form className="workspace" onSubmit={switchWorkspace} aria-label="Workspace">
-            <label className="inline">Workspace
-              <input type="text" value={workspaceDraft} onChange={(e) => setWorkspaceDraft(e.target.value)} maxLength={32} spellCheck={false} autoComplete="off" title="Lowercase letters, digits and hyphens, up to 32. Each workspace has its own sign-in, runs and traces." data-testid="workspace" />
-            </label>
-            <button type="submit" disabled={!WORKSPACE.test(workspaceDraft.trim().toLowerCase()) || workspaceDraft.trim().toLowerCase() === workspace}>Switch</button>
-          </form>
-          <label className="inline">Theme
-            <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-              {THEMES.map((t) => <option key={t} value={t}>{t[0].toUpperCase() + t.slice(1)}</option>)}
-            </select>
-          </label>
-          <button type="button" aria-pressed={presenter} onClick={() => setPresenter((p) => !p)}>Presenter</button>
-        </div>
-        <div className="who">
-          {me.signedIn
-            ? <><span>Signed in as <strong data-testid="who">{signedInAs}</strong></span><button type="button" onClick={signOut}>Sign out</button></>
-            : <button type="button" className="primary" onClick={signIn}>Sign in</button>}
+          <TopMenu
+            mode={{ value: config?.mode === 'live' ? 'real' : 'mock', onChange: switchMode, realAvailable, realHint: realReason }}
+            vertical={{ value: vertical, onChange: setVertical, options: verticals.map((v) => v.id || v) }}
+            theme={{ value: theme, onChange: setTheme }}
+            fontSize={{ value: fontStep, onChange: setFontStep }}
+            present={{ active: presenter, onToggle: () => setPresenter((p) => !p) }}
+            help={{ href: "https://github.com/curtismu7/pingone-LAB#readme" }}
+            version={config?.version || null}
+            extra={(
+              <form className="workspace" onSubmit={switchWorkspace} aria-label="Workspace">
+                <label className="inline">Workspace
+                  <input type="text" value={workspaceDraft} onChange={(e) => setWorkspaceDraft(e.target.value)} maxLength={32} spellCheck={false} autoComplete="off" title="Lowercase letters, digits and hyphens, up to 32. Each workspace has its own sign-in, runs and traces." data-testid="workspace" />
+                </label>
+                <button type="submit" disabled={!WORKSPACE.test(workspaceDraft.trim().toLowerCase()) || workspaceDraft.trim().toLowerCase() === workspace}>Switch</button>
+              </form>
+            )}
+            showSignIn
+            signedIn={me.signedIn
+              ? { subject: signedInAs, onSignOut: signOut }
+              : { subject: null, onSignIn: signIn }}
+          >
+            <ShelfLink />
+          </TopMenu>
         </div>
       </header>
       <main id="main" tabIndex={-1}>

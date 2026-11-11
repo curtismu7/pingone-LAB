@@ -20,6 +20,7 @@
   --scale: 1;
 }
 
+html { font-size: var(--fs, 16px); }
 html { -webkit-text-size-adjust: 100%; }
 body { background: var(--bg-lab); background-attachment: fixed; overflow-x: hidden; }
 .app { font-size: calc(16px * var(--scale)); min-height: 100vh; display: flex; flex-direction: column; }
@@ -48,7 +49,7 @@ fieldset { border: 1px solid var(--border); border-radius: 4px; margin: 12px 0; 
 legend { font-weight: 700; padding: 0 6px; color: var(--text); }
 
 /* Header, on the blue page: white text, controls keep their own surfaces. */
-.top { display: grid; grid-template-columns: 1fr auto auto; gap: 10px 20px; align-items: center; padding: 16px 0; max-width: 1240px; width: 100%; margin: 0 auto; color: var(--on-lab); }
+.top { position: relative; display: grid; grid-template-columns: 1fr auto auto; gap: 10px 20px; align-items: center; padding: 16px 0; max-width: 1240px; width: 100%; margin: 0 auto; color: var(--on-lab); }
 .top a { color: var(--on-lab); }
 .brand { min-width: 0; display: flex; gap: 12px; align-items: center; }
 .brand__logo { flex: 0 0 auto; border-radius: 4px; }

@@ -190,6 +190,7 @@ export function createApp({ port, fetchImpl = globalThis.fetch, settingsFile, sh
   // What the page needs to draw itself: branding, vocabulary, and which PingOne it talks to (for the banner).
   app.get('/api/config', wrap((req) => ({
     customer: publicConfig(customer, settings.mode()),
+    version: DEMO.version,
     issuer: settings.issuer() || null,
     mode: settings.mode(),
     source: settings.mode() === 'mock' ? 'mock' : 'real',

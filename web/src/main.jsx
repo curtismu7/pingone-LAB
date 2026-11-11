@@ -12,6 +12,7 @@ import '@fontsource/ibm-plex-mono/400.css';
 import '@fontsource/ibm-plex-mono/500.css';
 // The family's shared UI standard first (vendored byte-identical; see scripts/check-ui-standard.sh), then the lab's own layout.
 import './standalone-ui.css';
+import './top-menu/top-menu.css';
 import './app.css';
 
 createRoot(document.getElementById('root')).render(<StrictMode><App /></StrictMode>);

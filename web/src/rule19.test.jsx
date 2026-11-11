@@ -15,14 +15,12 @@ describe("Rule 19 Mock/Real toggle", () => {
       'PUT /api/mode': () => { switched = true; return { status: 409, body: { error: 'real_not_available', message: 'Real (live) is not available.' } }; },
     });
     render(<App />);
-    const real = await screen.findByRole('button', { name: 'Real' });
     await waitFor(() => expect(server.calls.some((c) => c.path === '/api/config')).toBe(true), { timeout: 3000 });
-    await waitFor(() => expect(real).toBeDisabled(), { timeout: 3000 });
-    expect(screen.getByTestId('mode-real').getAttribute('title')).toMatch(/Settings page/);
-    expect(real.getAttribute('title')).toMatch(/Settings page/);
-    await userEvent.click(real);
-    expect(switched).toBe(false, 'a disabled Real button never reaches the server');
-    expect(screen.getByTestId('mode-mock')).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(screen.getByTestId('mode-select').querySelector('option[value="real"]')).toBeDisabled(), { timeout: 3000 });
+    expect(screen.getByTestId('mode-select').querySelector('option[value="real"]').getAttribute('title')).toMatch(/Settings page/);
+    await userEvent.selectOptions(screen.getByTestId('mode-select'), 'real');
+    expect(switched).toBe(false, 'a disabled Real option never reaches the server');
+    expect(screen.getByTestId('mode-select')).toHaveValue('mock');
   });
 
   it('a loaded info stays in sync after a switch: the pressed button follows /api/info', async () => {
@@ -34,9 +32,8 @@ describe("Rule 19 Mock/Real toggle", () => {
       'PUT /api/mode': (body) => { source = body.mode === 'real' ? 'real' : 'mock'; return { body: { mode: source === 'real' ? 'live' : 'mock', source } }; },
     });
     render(<App />);
-    const real = await screen.findByRole('button', { name: 'Real' });
-    await waitFor(() => expect(real).toHaveAttribute('aria-pressed', 'true'), { timeout: 3000 });
-    await userEvent.click(screen.getByRole('button', { name: 'Mock' }));
-    await waitFor(() => expect(screen.getByTestId('mode-mock')).toHaveAttribute('aria-pressed', 'true'));
+    await waitFor(() => expect(screen.getByTestId('mode-select')).toHaveValue('real'), { timeout: 3000 });
+    await userEvent.selectOptions(screen.getByTestId('mode-select'), 'mock');
+    await waitFor(() => expect(screen.getByTestId('mode-select')).toHaveValue('mock'));
   });
 });

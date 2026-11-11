@@ -23,7 +23,7 @@ describe('banner (rule 2)', () => {
     mockServer(BASE_ROUTES(null));
     render(<App />);
     expect(await screen.findByTestId('banner')).toHaveTextContent('Live, not connected: set your PingOne environment in Settings, or switch to Mock.');
-    await userEvent.click(screen.getByRole('button', { name: 'Presenter' }));
+    await userEvent.click(screen.getByTestId('presenter'));
     expect(screen.getByTestId('banner')).toBeInTheDocument();
     await act(async () => { go('#/playground'); window.dispatchEvent(new HashChangeEvent('hashchange')); });
     expect(screen.getByTestId('banner')).toBeInTheDocument();
@@ -80,11 +80,11 @@ describe('shelf', () => {
     let mode = 'live';
     const server = mockServer({ ...BASE_ROUTES(), 'GET /api/config': () => ({ body: { customer: { name: 'PingOne Lab' }, issuer: mode === 'mock' ? 'https://auth.pingone-mock.invalid/e/as' : ISSUER, mode } }), 'GET /api/info': () => ({ body: { source: mode === 'mock' ? 'mock' : 'real', realAvailable: true, realReason: null, mode } }), 'PUT /api/mode': (body) => { mode = body.mode === 'real' ? 'live' : 'mock'; return { body: { mode, source: body.mode } }; } });
     render(<App />);
-    const live = await screen.findByRole('button', { name: 'Real' });
-    await waitFor(() => expect(live).toHaveAttribute('aria-pressed', 'true'));
-    await userEvent.click(screen.getByRole('button', { name: 'Mock' }));
+    const select = await screen.findByTestId('mode-select');
+    await waitFor(() => expect(select).toHaveValue('real'));
+    await userEvent.selectOptions(select, 'mock');
     await waitFor(() => expect(screen.getByTestId('banner')).toHaveTextContent('Mock: a simulated PingOne inside this lab.'));
-    expect(screen.getByRole('button', { name: 'Mock' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('mode-select')).toHaveValue('mock');
     expect(server.calls.filter((c) => c.path === '/api/mode')).toHaveLength(1);
   });
 
