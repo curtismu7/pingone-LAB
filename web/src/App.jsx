@@ -108,6 +108,10 @@ export default function App() {
     window.history.replaceState(null, '', `${window.location.pathname}${window.location.hash}`);
     window.location.reload();
   };
+  const reset = useCallback(async () => {
+    await api.reset();
+    await refresh();
+  }, [refresh]);
   const [modeBusy, setModeBusy] = useState(false);
   // Rule 19: Real is disabled with the server's reason while the live settings are incomplete. The fields ride
   // /api/config (refetched by refresh()), so the toggle is always in sync with the server's answer.
@@ -168,6 +172,7 @@ export default function App() {
             talkTrack={{ active: route.view === 'talk', onToggle: () => { window.location.hash = '#/talk'; } }}
             help={{ href: "https://github.com/curtismu7/pingone-LAB#readme" }}
             version={config?.version || null}
+            onReset={reset}
             extra={(
               <form className="workspace" onSubmit={switchWorkspace} aria-label="Workspace">
                 <label className="inline">Workspace
