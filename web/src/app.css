@@ -49,9 +49,11 @@ fieldset { border: 1px solid var(--border); border-radius: 4px; margin: 12px 0; 
 legend { font-weight: 700; padding: 0 6px; color: var(--text); }
 
 /* Header, on the blue page: white text, controls keep their own surfaces. */
-.top { position: relative; display: grid; grid-template-columns: 1fr auto auto; gap: 10px 20px; align-items: center; padding: 16px 0; max-width: 1240px; width: 100%; margin: 0 auto; color: var(--on-lab); }
+.top { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 16px 0; max-width: 1240px; width: 100%; margin: 0 auto; color: var(--on-lab); }
+.top .nav { margin-left: auto; }
+.top .prefs { flex-basis: 100%; justify-content: flex-end; }
 .top a { color: var(--on-lab); }
-.brand { min-width: 0; display: flex; gap: 12px; align-items: center; }
+.brand { min-width: 0; max-width: 46%; display: flex; gap: 12px; align-items: center; }
 .brand__logo { flex: 0 0 auto; border-radius: 4px; }
 .brand h1 { margin: 0; font-size: 1.6em; color: var(--on-lab); }
 .brand a { text-decoration: none; }
@@ -60,7 +62,7 @@ legend { font-weight: 700; padding: 0 6px; color: var(--text); }
 .nav a { padding: 8px 12px; border: 1px solid var(--on-lab); border-radius: 8px; text-decoration: none; font-weight: 600; }
 .nav a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .who { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.prefs { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; font-size: 0.9em; }
+.prefs { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; font-size: 0.9em; margin-bottom: -2px; }
 .mode-toggle { display: inline-flex; gap: 4px; }
 .workspace { display: inline-flex; gap: 6px; align-items: center; }
 .workspace input { width: 11ch; }
