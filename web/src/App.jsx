@@ -4,6 +4,7 @@ import Shelf from './views/Shelf.jsx';
 import RunView from './views/RunView.jsx';
 import Settings from './views/Settings.jsx';
 import Playground from './views/Playground.jsx';
+import TalkTrack from './views/TalkTrack.jsx';
 import ShelfLink from "./components/ShelfLink.jsx";
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
 
@@ -13,6 +14,7 @@ export function parseRoute(hash) {
   if (parts[0] === 'run' && parts[1]) return { view: 'run', card: parts[1] };
   if (parts[0] === 'settings') return { view: 'settings', focus: parts[1] && /^[A-Za-z][A-Za-z0-9]*\.[A-Za-z]+$/.test(parts[1]) ? parts[1] : null };
   if (parts[0] === 'playground') return { view: 'playground' };
+  if (parts[0] === 'talk') return { view: 'talk' };
   return { view: 'shelf' };
 }
 
@@ -28,6 +30,7 @@ export function viewTitle(route, cards, name = 'PingOne Lab') {
   const lab = name || 'PingOne Lab';
   if (route.view === 'settings') return `Settings - ${lab}`;
   if (route.view === 'playground') return `Protocol Playground - ${lab}`;
+  if (route.view === 'talk') return `Talk track - ${lab}`;
   if (route.view === 'run') { const card = cards.find((c) => c.id === route.card); return `${card ? card.title : 'Unknown card'} - ${lab}`; }
   return `Shelf - ${lab}`;
 }
@@ -153,6 +156,7 @@ export default function App() {
           <a href="#/" aria-current={route.view === 'shelf' ? 'page' : undefined}>Shelf</a>
           <a href="#/playground" aria-current={route.view === 'playground' ? 'page' : undefined}>Playground</a>
           <a href="#/settings" aria-current={route.view === 'settings' ? 'page' : undefined}>Settings</a>
+          <a href="#/talk" aria-current={route.view === 'talk' ? 'page' : undefined}>Talk track</a>
         </nav>
         <div className="prefs">
           <TopMenu
@@ -161,6 +165,7 @@ export default function App() {
             theme={{ value: theme, onChange: setTheme }}
             fontSize={{ value: fontStep, onChange: setFontStep }}
             present={{ active: presenter, onToggle: () => setPresenter((p) => !p) }}
+            talkTrack={{ active: route.view === 'talk', onToggle: () => { window.location.hash = '#/talk'; } }}
             help={{ href: "https://github.com/curtismu7/pingone-LAB#readme" }}
             version={config?.version || null}
             extra={(
@@ -189,6 +194,7 @@ export default function App() {
           : cards.length > 0 && <p>Unknown card. <a href="#/">Back to the shelf</a></p>)}
         {route.view === 'settings' && <Settings focus={route.focus} onChanged={refresh} warnings={config?.customer?.warnings || []} />}
         {route.view === 'playground' && <Playground cards={cards} onChanged={refresh} signedInAs={signedInAs} mock={config ? config.mode === 'mock' : null} />}
+        {route.view === 'talk' && <TalkTrack />}
       </main>
       <footer className="foot">
         <p>Live tokens are shown masked (first 6 and last 4 characters) and mock tokens whole, each with its decoded header and claims; secrets never leave the lab server. <a href="#/settings">Settings</a></p>

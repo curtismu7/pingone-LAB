@@ -272,3 +272,6 @@ main { background: var(--bg); color: var(--text-body); border-radius: 8px; paddi
 .edge-amber .react-flow__edge-path { stroke: var(--dg-amber); }
 .edge-red.edge-on .react-flow__edge-path, .edge-blue.edge-on .react-flow__edge-path, .edge-green.edge-on .react-flow__edge-path,
 .edge-dark.edge-on .react-flow__edge-path, .edge-grey.edge-on .react-flow__edge-path, .edge-amber.edge-on .react-flow__edge-path { stroke: var(--accent); }
+
+.talk { max-width: 52rem; }
+.talk__step { padding-left: 8px; border-left: 3px solid var(--accent); }
