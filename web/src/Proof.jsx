@@ -1,8 +1,11 @@
 import { useMemo, useRef, useState } from 'react';
 import DiagramView from './DiagramView.jsx';
+import Json from './components/JsonPane.jsx';
 import { latestTrace, proofPoints, traceToDiagram, endpointName, EXPECTED_REFUSALS } from './flows.js';
 
-const json = (value) => JSON.stringify(value, null, 2);
+// The keys that matter in this lab's PingOne payloads (the pane's defaults, sub / aud / scope / client_id / tokens ..., are always hot):
+// the pi.flow status, the introspection verdict, the tokens of a token response, the device user code, and how the user signed in.
+const HOT = ['status', 'active', 'id_token', 'refresh_token', 'user_code', 'acr', 'amr'];
 
 // A token as the server shows it: masked value (a mock token whole), length, kind, and its decoded header and claims.
 export function TokenView({ label, token }) {
@@ -11,10 +14,10 @@ export function TokenView({ label, token }) {
     <div className="token">
       <h4>{label}{token.mock && <span className="mock-tag">mock</span>}</h4>
       {token.value
-        ? <><p className="hint"><span className="tag">mock token, shown whole</span> ({token.length} characters, {token.kind}). It is fake and was signed inside this lab, so you can copy it into a decoder.</p><pre className="wrap">{token.value}</pre></>
+        ? <><p className="hint"><span className="tag">mock token, shown whole</span> ({token.length} characters, {token.kind}). It is fake and was signed inside this lab, so you can copy it into a decoder.</p><Json value={token.value} label="Mock token" hot={HOT} /></>
         : <p className="mono"><span className="tag">masked</span> {token.masked} <span className="hint">({token.length} characters, {token.kind})</span></p>}
-      {token.header && <><h5>Header</h5><pre>{json(token.header)}</pre></>}
-      {token.claims && <><h5>Claims</h5><pre>{json(token.claims)}</pre></>}
+      {token.header && <><h5>Header</h5><Json value={token.header} label="Token header" hot={HOT} /></>}
+      {token.claims && <><h5>Claims</h5><Json value={token.claims} label="Token claims" hot={HOT} /></>}
     </div>
   );
 }
@@ -52,19 +55,19 @@ export function TraceList({ trace }) {
                 <div className="io">
                   <h5>Request</h5>
                   <p className="mono wrap">{s.request.method} {s.request.url}</p>
-                  {s.request.headers && <pre>{json(s.request.headers)}</pre>}
-                  {s.request.params && <><h6>Parameters</h6><pre>{json(s.request.params)}</pre></>}
-                  {s.request.body && <><h6>Body</h6><pre>{json(s.request.body)}</pre></>}
+                  {s.request.headers && <Json value={s.request.headers} label="Request headers" hot={HOT} />}
+                  {s.request.params && <><h6>Parameters</h6><Json value={s.request.params} label="Request parameters" hot={HOT} /></>}
+                  {s.request.body && <><h6>Body</h6><Json value={s.request.body} label="Request body" hot={HOT} /></>}
                 </div>
               )}
               {s.response && (
                 <div className="io">
                   <h5>Response{Number.isInteger(status) ? ` ${status}` : ''}</h5>
                   {s.response.location && <p className="mono wrap">Location: {s.response.location}</p>}
-                  {s.response.body !== undefined && s.response.body !== null && <pre>{json(s.response.body)}</pre>}
+                  {s.response.body !== undefined && s.response.body !== null && <Json value={s.response.body} label="Response body" hot={HOT} />}
                 </div>
               )}
-              {s.claims && <div className="io"><h5>Decoded claims</h5><pre>{json(s.claims)}</pre></div>}
+              {s.claims && <div className="io"><h5>Decoded claims</h5><Json value={s.claims} label="Decoded claims" hot={HOT} /></div>}
             </details>
           </li>
         );
