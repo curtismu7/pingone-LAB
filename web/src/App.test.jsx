@@ -455,13 +455,33 @@ describe('mock labels', () => {
     // Built at run time: a literal JWT in the source is flagged by gitleaks, even a fake one.
     const whole = [btoa('{"alg":"ES256"}'), btoa('{"sub":"alice"}'), btoa('signature')].join('.');
     const { unmount } = render(<TokenView label="Access token" token={{ value: whole, length: whole.length, kind: 'JWT', claims: { sub: 'alice' }, mock: true }} />);
-    expect(screen.getByText(whole)).toBeInTheDocument();
+    // The shared JsonPane shows a token whole, in three coloured segments, so the text is the pane's content, not one text node.
+    expect(screen.getByLabelText('Mock token').textContent).toBe(whole);
     expect(screen.getByText('mock token, shown whole')).toBeInTheDocument();
     unmount();
     render(<TokenView label="Access token" token={{ masked: 'eyJhbG...abcd', length: 300, kind: 'JWT', claims: { sub: 'alice' } }} />);
     expect(screen.getByText('eyJhbG...abcd')).toBeInTheDocument();
-    expect(screen.queryByText(whole)).toBeNull();
+    expect(screen.queryByLabelText('Mock token')).toBeNull();
+    expect(document.body.textContent).not.toContain(whole);
     expect(screen.getByText('masked')).toBeInTheDocument();
+  });
+
+  it('request, response and claims JSON go through the shared JsonPane: Form | JSON, this lab\'s hot keys, never a bare pre', async () => {
+    const { TraceList } = await import('./Proof.jsx');
+    const { setJsonView } = await import('./components/JsonPane.jsx');
+    const trace = [{ id: 'authorize', title: 'Open the flow', request: { method: 'POST', url: 'https://auth.pingone-mock.invalid/e/as/authorize', params: { grant_type: 'authorization_code' }, body: { response_mode: 'pi.flow' } }, response: { status: 200, body: { status: 'USERNAME_PASSWORD_REQUIRED' } }, claims: { sub: 'alice', acr: 'Single_Factor' } }];
+    setJsonView('raw');
+    try {
+      const { container } = render(<TraceList trace={trace} />);
+      const panes = [...container.querySelectorAll('pre')];
+      expect(panes).toHaveLength(4); // parameters, request body, response body, decoded claims
+      expect(panes.every((p) => p.classList.contains('json'))).toBe(true);
+      expect(screen.getAllByRole('button', { name: 'Form' })).toHaveLength(4);
+      expect(screen.getAllByRole('button', { name: 'JSON' })).toHaveLength(4);
+      const hot = [...container.querySelectorAll('.jtok--hot')].map((n) => n.textContent);
+      expect(hot).toContain('"status"');
+      expect(hot).toContain('"acr"');
+    } finally { setJsonView('form'); }
   });
 
   it('in mock mode the sign-in dialog names the mock demo user and fills the username', async () => {
