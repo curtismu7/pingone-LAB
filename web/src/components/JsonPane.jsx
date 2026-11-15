@@ -27,6 +27,14 @@ let view = readPref(KEY, (v) => v === "form" || v === "raw", "form");
 const subs = new Set();
 const setView = (v) => { view = v; writePref(KEY, v); subs.forEach((f) => f()); };
 export const setJsonView = setView; // for tests: the choice is module state, shared by every pane
+// A lab that teaches the wire format can open on JSON instead of Form: call setDefaultJsonView("raw") once in main.jsx, before rendering.
+// A visitor's own saved choice still wins; with none saved, this is the default.
+export function setDefaultJsonView(v) {
+  if (v !== "form" && v !== "raw") return;
+  let saved = null;
+  try { saved = window.localStorage.getItem(KEY); } catch { /* no storage: the default applies */ }
+  if (saved !== "form" && saved !== "raw") { view = v; subs.forEach((f) => f()); }
+}
 const useView = () => useSyncExternalStore((f) => { subs.add(f); return () => subs.delete(f); }, () => view, () => "form");
 
 const JWT = /^eyJ[\w-]{4,}\.[\w-]{4,}\.[\w-]*$/;
