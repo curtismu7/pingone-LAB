@@ -78,7 +78,8 @@ export default function RunView({ card, story, onChanged, autoStart = false, onA
       )}
 
       <div className="run-actions">
-        <button type="button" className="primary" onClick={start} disabled={run.busy || !card.ready || notAdvertised || (card.id === 'ciba' && !cibaApprover)}>{run.busy ? 'Running...' : 'Run'}</button>
+        {/* ui-pattern: allow P9 Run is primary only while no sign-in is pending (run.waiting < 0); while one is, the one primary is the Credentials reopen Sign in, rendered only then. The checker cannot see that exclusion across components */}
+        <button type="button" className={run.waiting >= 0 ? undefined : 'primary'} onClick={start} disabled={run.busy || !card.ready || notAdvertised || (card.id === 'ciba' && !cibaApprover)}>{run.busy ? 'Running...' : 'Run'}</button>
         <button type="button" onClick={reset} disabled={run.busy}>Reset this card</button>
       </div>
 

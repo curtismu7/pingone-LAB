@@ -146,51 +146,54 @@ export default function App() {
     <div className={`app${presenter ? ' presenter' : ''}`}>
       {/* The skip link never changes the hash: the router reads the hash, so "#main" would leave the current view. */}
       <a className="skip" href="#main" onClick={skipToMain}>Skip to content</a>
-      <div className="banner" role="status" data-testid="banner" data-state={config?.mode === 'mock' ? 'mock' : 'live'}>
-        {bannerText(config?.issuer, config?.mode)}
-      </div>
-      <header className="top">
-        <div className="brand">
-          <img className="brand__logo" src="/ping-logo.png" alt="Ping Identity" width="36" height="36" />
+      {/* The standard app shell (STANDALONE-UI-PATTERNS section 1): Core Dark bar first, then <main>, whose first child
+          is the simulation banner. */}
+      <header className="shell-bar">
+        <span className="shell-brand">
+          <img className="shell-logo" src="/ping-logo.png" alt="Ping Identity" width="30" height="30" />
           <h1><a href="#/">{name}</a></h1>
-          {config?.customer?.tagline && <p className="tagline">{config.customer.tagline}</p>}
-        </div>
-        <nav className="nav" aria-label="Main">
-          <a href="#/" aria-current={route.view === 'shelf' ? 'page' : undefined}>Shelf</a>
+          {config && <span className={`shell-badge${config.mode === 'mock' ? '' : ' shell-badge--real'}`} data-testid="mode-badge">{config.mode === 'mock' ? 'Mock' : 'Real'}</span>}
+        </span>
+        <nav className="shell-nav" aria-label="Main">
+          {/* A card's run page sits under the shelf, so the Shelf pill stays lit there (aria-current="true": the current
+              section, not this exact page). */}
+          <a href="#/" aria-current={route.view === 'shelf' ? 'page' : route.view === 'run' ? 'true' : undefined}>Shelf</a>
           <a href="#/playground" aria-current={route.view === 'playground' ? 'page' : undefined}>Playground</a>
           <a href="#/settings" aria-current={route.view === 'settings' ? 'page' : undefined}>Settings</a>
           <a href="#/talk" aria-current={route.view === 'talk' ? 'page' : undefined}>Talk track</a>
         </nav>
-        <div className="prefs">
-          <TopMenu
-            mode={{ value: config?.mode === 'live' ? 'real' : 'mock', onChange: switchMode, realAvailable, realHint: realReason }}
-            vertical={{ value: vertical, onChange: setVertical, options: verticals.map((v) => v.id || v) }}
-            theme={{ value: theme, onChange: setTheme }}
-            fontSize={{ value: fontStep, onChange: setFontStep }}
-            present={{ active: presenter, onToggle: () => setPresenter((p) => !p) }}
-            talkTrack={{ active: route.view === 'talk', onToggle: () => { window.location.hash = '#/talk'; } }}
-            help={{ href: "https://github.com/curtismu7/pingone-LAB#readme" }}
-            version={config?.version || null}
-            onReset={reset}
-            extra={(
-              <form className="workspace" onSubmit={switchWorkspace} aria-label="Workspace">
-                <label className="inline">Workspace
-                  <input type="text" value={workspaceDraft} onChange={(e) => setWorkspaceDraft(e.target.value)} maxLength={32} spellCheck={false} autoComplete="off" title="Lowercase letters, digits and hyphens, up to 32. Each workspace has its own sign-in, runs and traces." data-testid="workspace" />
-                </label>
-                <button type="submit" disabled={!WORKSPACE.test(workspaceDraft.trim().toLowerCase()) || workspaceDraft.trim().toLowerCase() === workspace}>Switch</button>
-              </form>
-            )}
-            showSignIn
-            signedIn={me.signedIn
-              ? { subject: signedInAs, onSignOut: signOut }
-              : { subject: null, onSignIn: signIn }}
-          >
-            <VerifyMark id="pingone-lab" headers={() => ({ 'x-lab-workspace': currentWorkspace() })} />
-          </TopMenu>
-        </div>
+        <TopMenu
+          mode={{ value: config?.mode === 'live' ? 'real' : 'mock', onChange: switchMode, realAvailable, realHint: realReason }}
+          vertical={{ value: vertical, onChange: setVertical, options: verticals.map((v) => v.id || v) }}
+          theme={{ value: theme, onChange: setTheme }}
+          fontSize={{ value: fontStep, onChange: setFontStep }}
+          present={{ active: presenter, onToggle: () => setPresenter((p) => !p) }}
+          talkTrack={{ active: route.view === 'talk', onToggle: () => { window.location.hash = '#/talk'; } }}
+          help={{ href: "https://github.com/curtismu7/pingone-LAB#readme" }}
+          version={config?.version || null}
+          onReset={reset}
+          extra={(
+            <form className="workspace" onSubmit={switchWorkspace} aria-label="Workspace">
+              <label className="inline">Workspace
+                <input type="text" value={workspaceDraft} onChange={(e) => setWorkspaceDraft(e.target.value)} maxLength={32} spellCheck={false} autoComplete="off" title="Lowercase letters, digits and hyphens, up to 32. Each workspace has its own sign-in, runs and traces." data-testid="workspace" />
+              </label>
+              <button type="submit" disabled={!WORKSPACE.test(workspaceDraft.trim().toLowerCase()) || workspaceDraft.trim().toLowerCase() === workspace}>Switch</button>
+            </form>
+          )}
+          showSignIn
+          signedIn={me.signedIn
+            ? { subject: signedInAs, onSignOut: signOut }
+            : { subject: null, onSignIn: signIn }}
+        >
+          <VerifyMark id="pingone-lab" headers={() => ({ 'x-lab-workspace': currentWorkspace() })} />
+        </TopMenu>
       </header>
       <main id="main" tabIndex={-1}>
+        <div className="banner" role="status" data-testid="banner" data-state={config?.mode === 'mock' ? 'mock' : 'live'}>
+          {bannerText(config?.issuer, config?.mode)}
+        </div>
         {loadError && <p className="pt pt-error" role="alert">Could not load the lab: {loadError}</p>}
+        {config?.customer?.tagline && <p className="tagline">{config.customer.tagline}</p>}
         {route.view === 'shelf' && <Shelf cards={cards} story={story} verticals={verticals} vertical={vertical} onVertical={setVertical} />}
         {route.view === 'run' && (card
           ? <RunView key={card.id} card={card} story={story?.cards?.[card.id]} onChanged={refresh} signedInAs={signedInAs}

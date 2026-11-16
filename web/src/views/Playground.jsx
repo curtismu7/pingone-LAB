@@ -70,7 +70,8 @@ function FlowPanel({ flowId, ready, onChanged, signedInAs }) {
         </label>
       )}
       <div className="run-actions">
-        <button type="button" className="primary" onClick={() => run.runAll(options)} disabled={run.busy || !ready || needsSignIn}>Run all</button>
+        {/* ui-pattern: allow P9 Run all is primary only while no sign-in is pending (run.waiting < 0); while one is, the one primary is the Credentials reopen Sign in, rendered only then. The checker cannot see that exclusion across components */}
+        <button type="button" className={run.waiting >= 0 ? undefined : 'primary'} onClick={() => run.runAll(options)} disabled={run.busy || !ready || needsSignIn}>Run all</button>
         <button type="button" onClick={run.clear} disabled={run.busy}>Clear</button>
         {!ready && <span className="hint">Not ready: see the card on the shelf for what is missing.</span>}
         {ready && needsSignIn && <span className="hint">Type the user who should approve, or <a href="#/run/signin">sign in</a> and leave it empty to use yourself.</span>}

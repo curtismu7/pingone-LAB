@@ -69,6 +69,24 @@ describe('shelf', () => {
     expect(banner).not.toHaveAttribute('data-mode');
   });
 
+  it('shell bar first: brand, Mock badge, the current page pill and the TopMenu in header.shell-bar; the banner opens <main>', async () => {
+    mockServer({ ...BASE_ROUTES(), 'GET /api/config': () => ({ body: { customer: { name: 'PingOne Lab' }, issuer: 'https://auth.pingone-mock.invalid/e/as', mode: 'mock' } }) });
+    render(<App />);
+    await waitFor(() => expect(screen.getByTestId('mode-badge')).toHaveTextContent('Mock'));
+    const bar = document.querySelector('header.shell-bar');
+    expect(bar).not.toBeNull();
+    expect(document.querySelector('header.top')).toBeNull();
+    expect(bar.querySelector('.shell-brand h1')).toHaveTextContent('PingOne Lab');
+    expect(bar.querySelector('.shell-nav a[aria-current="page"]')).toHaveTextContent('Shelf');
+    expect(bar.querySelector('[data-testid=top-menu]')).toHaveClass('shell-right');
+    const main = document.querySelector('main');
+    expect(main.firstElementChild).toBe(screen.getByTestId('banner'));
+    // The bar comes before <main> in the page.
+    expect(bar.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // One primary on the shelf: the first card's Open.
+    expect([...main.querySelectorAll('.primary')].map((b) => b.textContent)).toEqual(['Open']);
+  });
+
   it('the vendored shared stylesheet is imported before the lab\'s own', () => {
     const main = fs.readFileSync(path.join(here, 'main.jsx'), 'utf8');
     expect(main.indexOf("import './standalone-ui.css'")).toBeGreaterThan(-1);
