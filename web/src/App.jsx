@@ -6,6 +6,7 @@ import Settings from './views/Settings.jsx';
 import Playground from './views/Playground.jsx';
 import TalkTrack from './views/TalkTrack.jsx';
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
+import VerifyMark from "./components/VerifyMark.jsx";
 
 // Hash routes: #/ (shelf), #/run/<card>, #/settings[/<section.field>], #/playground.
 export function parseRoute(hash) {
@@ -184,6 +185,7 @@ export default function App() {
               ? { subject: signedInAs, onSignOut: signOut }
               : { subject: null, onSignIn: signIn }}
           >
+            <VerifyMark id="pingone-lab" headers={() => ({ 'x-lab-workspace': currentWorkspace() })} />
           </TopMenu>
         </div>
       </header>
