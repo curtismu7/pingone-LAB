@@ -287,3 +287,12 @@ h2[data-n]::before { content: attr(data-n); display: inline-grid; place-items: c
 
 .talk { max-width: 52rem; }
 .talk__step { padding-left: 8px; border-left: 3px solid var(--accent); }
+
+/* An expanded box (diagram kit §8c): give it a width the details can be read at. */
+.react-flow__node.dk-open {
+  width: 320px;
+}
+.react-flow__node.dk-open .dg-node {
+  max-height: 420px;
+  overflow-y: auto;
+}
