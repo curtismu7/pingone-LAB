@@ -55,7 +55,7 @@ legend { font-weight: 700; padding: 0 6px; color: var(--text); }
   background: var(--box-dark); color: var(--on-box); border-bottom: 3px solid transparent; border-image: var(--accent-gradient) 1; }
 .shell-bar h1 { margin: 0; font-size: 1.15rem; color: var(--on-box); }
 .shell-bar h1 a { color: var(--on-box); text-decoration: none; }
-.shell-brand { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+.shell-brand  { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
 .shell-logo { flex: 0 0 auto; border-radius: 4px; }
 .shell-badge { padding: 2px 8px; border-radius: 999px; border: 1px solid transparent; background: var(--accent-gradient); color: var(--on-accent); font: 700 0.7rem var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
 .shell-badge--real { background: var(--surface-2); color: var(--status-warn); border-color: var(--status-warn); }
