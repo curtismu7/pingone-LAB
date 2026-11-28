@@ -2,7 +2,7 @@
 
 About 12 minutes for the core cards; each card also stands alone. Use **Mock** to rehearse or when there is no
 PingOne environment to hand (nothing leaves the laptop); use **Live** to show your own PingOne. Say which one is on:
-the banner always does, and Presenter mode keeps it on screen.
+the Real-or-mock modal says it when the page opens, and the mode badge in the header keeps saying it, Presenter mode included.
 
 ## Before you start
 

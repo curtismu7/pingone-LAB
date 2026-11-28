@@ -87,8 +87,8 @@ the Host the family lab-proxy sends for this lab (the `LAB_ALLOWED_HOSTS` value 
 
 ## Mock and live modes
 
-The header's **Mock / Live** toggle (on every page, presenter mode included) switches the whole lab, and the banner
-says which mode is on. The choice is saved in the settings file (`mode`). With no choice saved, the lab starts in
+The header's **Mock / Live** toggle (on every page, presenter mode included) switches the whole lab; the Real-or-mock modal
+opens the page on the mode that is on (MOCK or REAL) and the mode badge in the header keeps saying it. The choice is saved in the settings file (`mode`). With no choice saved, the lab starts in
 **Live** when a PingOne environment is configured and in **Mock** otherwise. Switching signs everyone out.
 
 - **Mock:** the outbound door hands every call to the in-process mock instead of the network; the real `fetch`

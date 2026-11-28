@@ -63,8 +63,14 @@ try {
   };
 
   await page.goto(`${lab.base}/#/`);
-  // The banner says Live until the page has read the lab's config, so wait for it.
-  note(await page.locator('[data-testid="banner"][data-state="mock"]').waitFor({ timeout: 15000 }).then(() => true, () => false), 'starts in Mock');
+  // The Real-or-mock modal says MOCK with a "not known yet" line until the page has read the lab's config, so wait for the Mock line.
+  note(await page.locator('[data-testid="mode-modal"][data-mode="mock"]').filter({ hasText: 'A simulated PingOne inside this lab' }).waitFor({ timeout: 15000 }).then(() => true, () => false), 'starts in Mock: the page opens on the MOCK modal');
+  // Got it closes it (it would cover every click below), and a reload in the same session does not bring it back or show a simulation banner.
+  await page.getByTestId('mode-modal-ok').click();
+  note(await page.getByTestId('mode-modal').count() === 0, 'Got it closes the modal');
+  await page.reload();
+  await page.getByTestId('mode-badge').waitFor();
+  note(await page.getByTestId('mode-modal').count() === 0 && await page.getByTestId('banner').count() === 0, 'no modal after a same-session reload, and no simulation banner');
 
   for (const id of CARDS) {
     await page.goto(`${lab.base}/#/run/${id}`);
