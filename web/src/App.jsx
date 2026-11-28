@@ -7,6 +7,7 @@ import Playground from './views/Playground.jsx';
 import TalkTrack from './views/TalkTrack.jsx';
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
 import VerifyMark from "./components/VerifyMark.jsx";
+import ModeModal from "./mode-modal/ModeModal.jsx";
 
 // Hash routes: #/ (shelf), #/run/<card>, #/settings[/<section.field>], #/playground.
 export function parseRoute(hash) {
@@ -18,13 +19,14 @@ export function parseRoute(hash) {
   return { view: 'shelf' };
 }
 
-// Rule 2: says on every view, presenter mode included, which mode the lab is in and what that means.
-export function bannerText(issuer, mode) {
-  if (mode === 'mock') return 'Mock: a simulated PingOne inside this lab. Nothing leaves this machine.';
-  return issuer
-    ? `Live: every call goes to your PingOne environment at ${issuer}. Nothing here is simulated.`
-    : 'Live, not connected: set your PingOne environment in Settings, or switch to Mock.';
-}
+// Rule 2 (amended 2026-11-28): the Real-or-mock modal says which mode the lab is in and what that means (it replaced the banner).
+// Until /api/config has answered it says MOCK with the "unknown" line; Live is this lab's word for REAL, and Live with no environment set is "off".
+export const MODE_LINES = {
+  unknown: 'The lab server has not said which mode this is yet, so treat everything as simulated until it does.',
+  mock: 'A simulated PingOne inside this lab. Nothing leaves this machine.',
+  live: (issuer) => `Every call goes to your PingOne environment at ${issuer}. Nothing here is simulated.`,
+  off: 'Live, not connected: set your PingOne environment in Settings, or switch to Mock.',
+};
 
 export function viewTitle(route, cards, name = 'PingOne Lab') {
   const lab = name || 'PingOne Lab';
@@ -146,8 +148,7 @@ export default function App() {
     <div className={`app${presenter ? ' presenter' : ''}`}>
       {/* The skip link never changes the hash: the router reads the hash, so "#main" would leave the current view. */}
       <a className="skip" href="#main" onClick={skipToMain}>Skip to content</a>
-      {/* The standard app shell (STANDALONE-UI-PATTERNS section 1): Core Dark bar first, then <main>, whose first child
-          is the simulation banner. */}
+      {/* The standard app shell (STANDALONE-UI-PATTERNS section 1): Core Dark bar first, then <main>. */}
       <header className="shell-bar">
         <span className="shell-brand">
           <img className="shell-logo" src="/ping-logo.png" alt="Ping Identity" width="30" height="30" />
@@ -189,9 +190,6 @@ export default function App() {
         </TopMenu>
       </header>
       <main id="main" tabIndex={-1}>
-        <div className="banner" role="status" data-testid="banner" data-state={config?.mode === 'mock' ? 'mock' : 'live'}>
-          {bannerText(config?.issuer, config?.mode)}
-        </div>
         {loadError && <p className="pt pt-error" role="alert">Could not load the lab: {loadError}</p>}
         {config?.customer?.tagline && <p className="tagline">{config.customer.tagline}</p>}
         {route.view === 'shelf' && <Shelf cards={cards} story={story} verticals={verticals} vertical={vertical} onVertical={setVertical} />}
@@ -206,6 +204,7 @@ export default function App() {
       <footer className="foot">
         <p>Live tokens are shown masked (first 6 and last 4 characters) and mock tokens whole, each with its decoded header and claims; secrets never leave the lab server. <a href="#/settings">Settings</a></p>
       </footer>
+      <ModeModal mode={config && config.mode !== 'mock' ? 'real' : 'mock'} lines={{ mock: config ? MODE_LINES.mock : MODE_LINES.unknown, real: config?.issuer ? MODE_LINES.live(config.issuer) : MODE_LINES.off }} storageKey="p1l-mode" />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { render, screen, waitFor, within, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import App, { bannerText, parseRoute } from './App.jsx';
+import App, { MODE_LINES, parseRoute } from './App.jsx';
 import { mockServer, BASE_ROUTES, CARDS, ISSUER, hop } from './testApi.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -13,20 +13,83 @@ const go = (hash) => { window.location.hash = hash; };
 beforeEach(() => { go('#/'); });
 afterEach(() => { vi.unstubAllGlobals(); });
 
-describe('banner (rule 2)', () => {
-  it('says live with the issuer, or not connected', () => {
-    expect(bannerText(ISSUER)).toBe(`Live: every call goes to your PingOne environment at ${ISSUER}. Nothing here is simulated.`);
-    expect(bannerText(null)).toBe('Live, not connected: set your PingOne environment in Settings, or switch to Mock.');
-    expect(bannerText('https://auth.pingone-mock.invalid/x/as', 'mock')).toBe('Mock: a simulated PingOne inside this lab. Nothing leaves this machine.');
+// Hold GET /api/config on a promise (the page shows MOCK until it answers); call after mockServer, which installs the fetch it wraps.
+function holdConfig() {
+  let release; const held = new Promise((r) => { release = r; });
+  const inner = globalThis.fetch;
+  vi.stubGlobal('fetch', (path, init) => (path === '/api/config' ? held.then(() => inner(path, init)) : inner(path, init)));
+  return { release };
+}
+const MOCK_CONFIG = (routes) => ({ ...routes, 'GET /api/config': { ...routes['GET /api/config'], issuer: 'https://auth.pingone-mock.invalid/e/as', mode: 'mock' } });
+
+describe('Real-or-mock modal (rule 2)', () => {
+  it('has a line for live with the issuer, live not connected, mock, and not known yet', () => {
+    expect(MODE_LINES.live(ISSUER)).toBe(`Every call goes to your PingOne environment at ${ISSUER}. Nothing here is simulated.`);
+    expect(MODE_LINES.off).toBe('Live, not connected: set your PingOne environment in Settings, or switch to Mock.');
+    expect(MODE_LINES.mock).toBe('A simulated PingOne inside this lab. Nothing leaves this machine.');
+    expect(MODE_LINES.unknown).toMatch(/has not said which mode/);
   });
-  it('is on every view, presenter mode included', async () => {
+  it('opens on MOCK with the unknown line before /api/config answers, then the Mock line; Got it closes it for the session', async () => {
+    mockServer(MOCK_CONFIG(BASE_ROUTES()));
+    const { release } = holdConfig();
+    const { unmount } = render(<App />);
+    const early = screen.getByTestId('mode-modal');
+    expect(early).toHaveAttribute('data-mode', 'mock');
+    expect(early).toHaveTextContent(MODE_LINES.unknown);
+    release();
+    await waitFor(() => expect(screen.getByTestId('mode-modal')).toHaveTextContent(MODE_LINES.mock));
+    expect(screen.getByTestId('mode-modal')).toHaveTextContent('MOCK');
+    expect(screen.getByTestId('mode-modal-ok')).toHaveFocus();
+    await userEvent.click(screen.getByTestId('mode-modal-ok'));
+    expect(screen.queryByTestId('mode-modal')).toBeNull();
+    unmount();
+    mockServer(MOCK_CONFIG(BASE_ROUTES()));
+    render(<App />);
+    await screen.findByTestId('mode-select');
+    expect(screen.queryByTestId('mode-modal')).toBeNull();
+  });
+  it('Escape closes the modal', async () => {
+    mockServer(BASE_ROUTES());
+    render(<App />);
+    await screen.findByTestId('mode-select');
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByTestId('mode-modal')).toBeNull();
+  });
+  it('a lab that is already Live shows MOCK until /api/config answers, then REAL with the issuer', async () => {
+    mockServer(BASE_ROUTES());
+    const { release } = holdConfig();
+    render(<App />);
+    expect(screen.getByTestId('mode-modal')).toHaveAttribute('data-mode', 'mock');
+    release();
+    await waitFor(() => expect(screen.getByTestId('mode-modal')).toHaveAttribute('data-mode', 'real'));
+    expect(screen.getByTestId('mode-modal')).toHaveTextContent('REAL');
+    expect(screen.getByTestId('mode-modal')).toHaveTextContent(MODE_LINES.live(ISSUER));
+  });
+  it('Live with no environment set opens REAL with the not-connected line', async () => {
     mockServer(BASE_ROUTES(null));
     render(<App />);
-    expect(await screen.findByTestId('banner')).toHaveTextContent('Live, not connected: set your PingOne environment in Settings, or switch to Mock.');
+    await waitFor(() => expect(screen.getByTestId('mode-modal')).toHaveAttribute('data-mode', 'real'));
+    expect(screen.getByTestId('mode-modal')).toHaveTextContent(MODE_LINES.off);
+  });
+  it('shows MOCK, not a Real claim, when the lab server cannot be reached', async () => {
+    vi.stubGlobal('fetch', () => Promise.reject(new Error('down')));
+    render(<App />);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Could not load the lab/);
+    expect(screen.getByTestId('mode-modal')).toHaveAttribute('data-mode', 'mock');
+    expect(screen.getByTestId('mode-modal')).toHaveTextContent(MODE_LINES.unknown);
+  });
+  it('there is no simulation banner on any view; the mode badge and toggle stay in presenter mode', async () => {
+    mockServer(MOCK_CONFIG(BASE_ROUTES()));
+    render(<App />);
+    await screen.findByTestId('mode-select');
+    await userEvent.click(screen.getByTestId('mode-modal-ok'));
+    expect(screen.queryByTestId('banner')).toBeNull();
+    expect(document.querySelector('main > .banner')).toBeNull();
     await userEvent.click(screen.getByTestId('presenter'));
-    expect(screen.getByTestId('banner')).toBeInTheDocument();
+    expect(screen.getByTestId('mode-select')).toBeInTheDocument();
     await act(async () => { go('#/playground'); window.dispatchEvent(new HashChangeEvent('hashchange')); });
-    expect(screen.getByTestId('banner')).toBeInTheDocument();
+    expect(screen.getByTestId('mode-badge')).toHaveTextContent('Mock');
+    expect(screen.queryByTestId('banner')).toBeNull();
   });
 });
 
@@ -62,14 +125,7 @@ describe('shelf', () => {
     expect(css).not.toMatch(/prefers-color-scheme|!important|font-style:\s*italic/);
   });
 
-  it('the banner says live or mock with data-state, as the shared stylesheet expects', async () => {
-    render(<App />);
-    const banner = await screen.findByTestId('banner');
-    expect(banner).toHaveAttribute('data-state');
-    expect(banner).not.toHaveAttribute('data-mode');
-  });
-
-  it('shell bar first: brand, Mock badge, the current page pill and the TopMenu in header.shell-bar; the banner opens <main>', async () => {
+  it('shell bar first: brand, Mock badge, the current page pill and the TopMenu in header.shell-bar; <main> has no simulation banner', async () => {
     mockServer({ ...BASE_ROUTES(), 'GET /api/config': () => ({ body: { customer: { name: 'PingOne Lab' }, issuer: 'https://auth.pingone-mock.invalid/e/as', mode: 'mock' } }) });
     render(<App />);
     await waitFor(() => expect(screen.getByTestId('mode-badge')).toHaveTextContent('Mock'));
@@ -80,7 +136,7 @@ describe('shelf', () => {
     expect(bar.querySelector('.shell-nav a[aria-current="page"]')).toHaveTextContent('Shelf');
     expect(bar.querySelector('[data-testid=top-menu]')).toHaveClass('shell-right');
     const main = document.querySelector('main');
-    expect(main.firstElementChild).toBe(screen.getByTestId('banner'));
+    expect(screen.queryByTestId('banner')).toBeNull();
     // The bar comes before <main> in the page.
     expect(bar.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // One primary on the shelf: the first card's Open.
@@ -101,7 +157,8 @@ describe('shelf', () => {
     const select = await screen.findByTestId('mode-select');
     await waitFor(() => expect(select).toHaveValue('real'));
     await userEvent.selectOptions(select, 'mock');
-    await waitFor(() => expect(screen.getByTestId('banner')).toHaveTextContent('Mock: a simulated PingOne inside this lab.'));
+    await waitFor(() => expect(screen.getByTestId('mode-modal')).toHaveAttribute('data-mode', 'mock'));
+    expect(screen.getByTestId('mode-modal')).toHaveTextContent('A simulated PingOne inside this lab.');
     expect(screen.getByTestId('mode-select')).toHaveValue('mock');
     expect(server.calls.filter((c) => c.path === '/api/mode')).toHaveLength(1);
   });
@@ -204,6 +261,8 @@ describe('settings', () => {
 });
 
 describe('card run', () => {
+  // The Real-or-mock modal is itself a dialog: these tests count and close the sign-in dialog, so the modal is dismissed up front.
+  beforeEach(() => { sessionStorage.setItem('p1l-mode-seen-mock', '1'); sessionStorage.setItem('p1l-mode-seen-real', '1'); });
   it('lifecycle runs its four steps in order; the refused revoked refresh is a pass, shown in the proof and the live sequence', async () => {
     const t1 = [hop('refresh', 'Refresh: trade the refresh token for new tokens', 'POST', `${ISSUER}/token`, 200)];
     const t2 = [...t1, hop('introspect', 'Introspect the access token', 'POST', `${ISSUER}/introspect`, 200)];
